@@ -967,6 +967,48 @@ button.midia{
 .popup form{margin-top:20px;}
 
 /* =====================================================================
+   MODAL DE VÍDEO — abre o vídeo do mural em tamanho grande
+   =====================================================================*/
+.video-modal-fundo{
+  position:fixed; inset:0; z-index:2200;
+  background:rgba(20,16,12,.85);
+  display:flex; align-items:center; justify-content:center;
+  padding:24px;
+  opacity:0; pointer-events:none;
+  transition:opacity .25s ease;
+}
+.video-modal-fundo.aberto{opacity:1; pointer-events:auto;}
+.video-modal{
+  position:relative;
+  width:min(90vw, 440px);
+  max-height:88vh;
+  aspect-ratio:9/16;
+  background:#000;
+  border-radius:10px;
+  overflow:hidden;
+  box-shadow:0 40px 70px -20px rgba(0,0,0,.6);
+  transform:scale(.94);
+  transition:transform .25s ease;
+}
+.video-modal-fundo.aberto .video-modal{transform:scale(1);}
+.video-modal__player{width:100%; height:100%;}
+.video-modal__player iframe{width:100%; height:100%; border:0; display:block;}
+.video-modal__fechar{
+  position:absolute; top:10px; right:10px; z-index:2;
+  width:36px; height:36px;
+  border-radius:50%;
+  background:rgba(0,0,0,.55);
+  color:var(--branco);
+  font-family:var(--f-display);
+  font-size:1.3rem;
+  line-height:1;
+  border:none;
+  cursor:pointer;
+}
+.video-modal__fechar:hover,
+.video-modal__fechar:focus-visible{background:var(--carimbo);}
+
+/* =====================================================================
    RESPONSIVO GERAL
    =====================================================================*/
 @media (max-width:640px){
@@ -1203,6 +1245,16 @@ button.midia{
     <p id="rodape-copyright"></p>
   </div>
 </footer>
+
+<!-- =====================================================
+     MODAL DE VÍDEO — abre o vídeo do mural em tamanho grande
+===================================================== -->
+<div class="video-modal-fundo" id="video-modal-fundo">
+  <div class="video-modal" role="dialog" aria-modal="true" aria-label="Vídeo ampliado">
+    <button class="video-modal__fechar" id="video-modal-fechar" aria-label="Fechar vídeo">×</button>
+    <div class="video-modal__player" id="video-modal-player"></div>
+  </div>
+</div>
 
 <!-- =====================================================
      POP-UP — bilhete digitado
@@ -1632,16 +1684,44 @@ function iniciarMural(){
     renderizarVideosMural();
   });
 
-  // Clique no vídeo troca a miniatura por um player embutido do YouTube.
-  // Os vídeos são "não listados", então o embed funciona normalmente mesmo
-  // sem aparecer na busca do YouTube.
+  // Clique no vídeo abre ele grande, num modal central, em vez de tocar
+  // dentro do cardzinho pequeno da polaroid.
   document.getElementById("mural-portfolio").addEventListener("click", function(e){
     const botao = e.target.closest("[data-video-id]");
     if (!botao) return;
-    const wrapper = document.createElement("div");
-    wrapper.className = botao.className;
-    wrapper.innerHTML = `<iframe src="https://www.youtube.com/embed/${botao.dataset.videoId}?autoplay=1&rel=0" title="${botao.getAttribute("aria-label")}" referrerpolicy="origin" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>`;
-    botao.replaceWith(wrapper);
+    abrirVideoModal(botao.dataset.videoId, botao.getAttribute("aria-label"), botao);
+  });
+
+  iniciarVideoModal();
+}
+
+let elementoComFocoAntesDoVideo = null;
+
+function abrirVideoModal(videoId, titulo, botaoOrigem){
+  const fundo = document.getElementById("video-modal-fundo");
+  const player = document.getElementById("video-modal-player");
+  elementoComFocoAntesDoVideo = botaoOrigem || document.activeElement;
+  player.innerHTML = `<iframe src="https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0" title="${titulo}" referrerpolicy="origin" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>`;
+  fundo.classList.add("aberto");
+  document.getElementById("video-modal-fechar").focus();
+}
+
+function fecharVideoModal(){
+  const fundo = document.getElementById("video-modal-fundo");
+  fundo.classList.remove("aberto");
+  // Esvazia o player pra parar o áudio/vídeo quando fecha.
+  document.getElementById("video-modal-player").innerHTML = "";
+  if (elementoComFocoAntesDoVideo) elementoComFocoAntesDoVideo.focus();
+}
+
+function iniciarVideoModal(){
+  const fundo = document.getElementById("video-modal-fundo");
+  document.getElementById("video-modal-fechar").addEventListener("click", fecharVideoModal);
+  fundo.addEventListener("click", function(e){
+    if (e.target === fundo) fecharVideoModal();
+  });
+  document.addEventListener("keydown", function(e){
+    if (e.key === "Escape" && fundo.classList.contains("aberto")) fecharVideoModal();
   });
 }
 
