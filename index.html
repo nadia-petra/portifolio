@@ -371,9 +371,11 @@ a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,
 .hero{
   position:relative;
   background:var(--off-white);
+  padding:130px 0 64px;
 }
 .hero__grade{
   display:grid;
+  gap:36px;
 }
 .hero__texto{
   order:1;
@@ -383,13 +385,17 @@ a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,
   text-align:center;
   justify-content:center;
   gap:20px;
-  padding:130px 24px 64px;
 }
 .hero__foto{
   order:0;
   position:relative;
-  min-height:100vh;
+  width:min(78vw, 340px);
+  aspect-ratio:4/5;
+  margin:0 auto;
+  border-radius:26px;
   overflow:hidden;
+  align-self:center;
+  box-shadow:0 30px 50px -22px rgba(35,30,20,.35);
   background:linear-gradient(150deg, var(--azul-medio), var(--bege-escuro) 80%);
 }
 .hero__foto img{
@@ -430,12 +436,11 @@ a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,
 .hero__contato svg{width:16px; height:16px; stroke:var(--carimbo);}
 
 @media (min-width:900px){
-  .hero__grade{grid-template-columns:1fr 1fr;}
+  .hero__grade{grid-template-columns:1fr 1fr; align-items:center;}
   .hero__texto{
     order:0;
     align-items:flex-start;
     text-align:left;
-    padding:0 40px 0 clamp(24px,6vw,90px);
   }
   .hero__foto{order:1;}
   .hero__contato{justify-content:flex-start;}
@@ -516,46 +521,39 @@ a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,
 }
 
 /* =====================================================================
-   MÁQUINA DE ESCREVER (dentro da seção sobre)
+   NOTA DE CADERNO (dentro da seção sobre, no lugar da máquina de escrever)
    =====================================================================*/
-.maquina-bloco{
-  max-width:560px;
-  margin:0 auto 64px;
-}
-.maquina{
+.nota-caderno{
   position:relative;
-  background:linear-gradient(160deg, var(--tinta-suave), var(--tinta));
-  border-radius:16px 16px 30px 30px;
-  padding:22px 22px 46px;
-  box-shadow:0 24px 34px -14px var(--sombra-forte);
-}
-.maquina__teclas{
-  display:grid;
-  grid-template-columns:repeat(11,1fr);
-  gap:5px;
-  margin-top:14px;
-}
-.maquina__teclas span{
-  aspect-ratio:1/1;
-  border-radius:50%;
-  background:linear-gradient(160deg, var(--off-white), var(--cinza-claro));
-  box-shadow:0 3px 0 rgba(0,0,0,.25);
-}
-.maquina__papel{
-  position:relative;
-  margin:-70px auto 0;
-  width:88%;
-  min-height:150px;
+  width:min(100%, 320px);
+  margin:-18px auto 0;
   background:var(--branco);
-  box-shadow:0 -6px 16px -8px rgba(0,0,0,.15), 0 16px 24px -10px var(--sombra);
-  padding:26px 20px 20px;
-  background-image:repeating-linear-gradient(var(--branco) 0 27px, rgba(46,43,38,.06) 27px 28px);
+  border-radius:8px;
+  padding:24px 22px 24px 48px;
+  box-shadow:0 16px 26px -10px var(--sombra);
+  background-image:repeating-linear-gradient(var(--branco) 0 27px, rgba(46,43,38,.07) 27px 28px);
+  transform:rotate(var(--rot,0deg));
 }
-.maquina__texto{
+.nota-caderno::before{
+  content:"";
+  position:absolute; left:30px; top:0; bottom:0; width:1px;
+  background:var(--carimbo); opacity:.35;
+}
+.nota-caderno__furos{
+  position:absolute; left:11px; top:20px; bottom:20px;
+  display:flex; flex-direction:column; justify-content:space-between;
+}
+.nota-caderno__furos span{
+  width:11px; height:11px; border-radius:50%;
+  background:var(--off-white);
+  box-shadow:inset 0 2px 3px rgba(0,0,0,.18);
+}
+.nota-caderno__texto{
   font-family:var(--f-datilografia);
-  font-size:.98rem;
+  font-size:.92rem;
   color:var(--tinta);
   white-space:pre-wrap;
+  min-height:70px;
 }
 .maquina__cursor{
   display:inline-block;
@@ -582,11 +580,16 @@ a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,
 }
 .sobre__papel p{color:var(--tinta-suave); font-size:1.02rem; margin-bottom:14px;}
 .sobre__papel p:last-child{margin-bottom:0;}
-.sobre__polaroids{
-  display:flex; flex-wrap:wrap; gap:24px; justify-content:center;
+.sobre__lado{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:28px;
 }
-.sobre__polaroids .polaroid{width:150px;}
-.sobre__postit-flutuante{position:relative; align-self:flex-start;}
+.sobre__polaroids{
+  display:flex; flex-direction:row; flex-wrap:wrap; justify-content:center; gap:20px;
+}
+.sobre__polaroids .polaroid{width:160px;}
 
 @media (min-width:900px){
   .sobre__grade{grid-template-columns:1.15fr .85fr; align-items:start;}
@@ -638,10 +641,16 @@ a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,
   border-radius:999px;
   color:var(--tinta-suave);
 }
-.servicos__bilhete{
-  max-width:230px;
-  margin:44px auto 0;
-  position:relative;
+.servicos__nota-processo{
+  max-width:540px;
+  margin:48px auto 0;
+  padding-top:26px;
+  border-top:1px dashed rgba(46,43,38,.25);
+  text-align:center;
+  font-family:var(--f-datilografia);
+  font-size:.85rem;
+  color:var(--tinta-suave);
+  line-height:1.6;
 }
 
 /* =====================================================================
@@ -1039,14 +1048,14 @@ button.midia{
        1. HERO — MESA CRIATIVA
   ===================================================== -->
   <section id="inicio" class="hero">
-    <div class="hero__grade">
+    <div class="container hero__grade">
       <div class="hero__texto">
         <h1 class="hero__nome" id="hero-nome"></h1>
         <p class="hero__cargo" id="hero-cargo"></p>
         <div class="hero__contato" id="hero-contato"></div>
       </div>
 
-      <!-- Foto de capa, em destaque, ocupando a altura toda da tela. Pra
+      <!-- Foto de capa, em tamanho contido (não ocupa a tela toda). Pra
            trocar a foto depois, é só substituir o arquivo imagens/foto-capa.jpg
            por outra com o mesmo nome. -->
       <div class="hero__foto">
@@ -1061,20 +1070,9 @@ button.midia{
   <section id="sobre" class="folha folha--branca">
     <div class="container">
 
-      <div class="maquina-bloco revelar" id="observador-maquina">
-        <div class="maquina">
-          <div class="maquina__teclas">
-            <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
-          </div>
-        </div>
-        <div class="maquina__papel">
-          <p class="maquina__texto"><span id="maquina-texto"></span><span class="maquina__cursor" id="maquina-cursor"></span></p>
-        </div>
-      </div>
-
       <div class="cabecalho-secao revelar">
         <p class="rotulo-eyebrow">SOBRE MIM</p>
-        <h2 class="titulo-secao">um pouco de vida real.<br>muita coisa pra contar.</h2>
+        <h2 class="titulo-secao">um pouco de vida real.</h2>
       </div>
 
       <div class="sobre__grade">
@@ -1084,22 +1082,30 @@ button.midia{
           <div id="sobre-texto"></div>
         </div>
 
-        <div class="sobre__polaroids revelar revelar-d1">
-          <!-- Fotos das polaroids. Pra trocar depois, é só substituir os arquivos
-               imagens/sobre/polaroid-1.jpg e polaroid-2.jpg por outras com o mesmo nome. -->
-          <div class="polaroid" style="--rot:-6deg; transform:rotate(-6deg);">
-            <div class="midia midia-a">
-              <img src="imagens/sobre/polaroid-1.jpg" alt="De onde vêm as ideias de Nadia Petra">
-            </div>
-            <p class="polaroid__legenda" id="sobre-legenda-1"></p>
+        <div class="sobre__lado revelar revelar-d1">
+          <!-- Nota de caderno com o texto digitado sozinho. Fica à direita
+               da página, com o mesmo efeito de digitação de antes. -->
+          <div class="nota-caderno" id="observador-maquina" style="--rot:2deg;">
+            <div class="nota-caderno__furos"><span></span><span></span><span></span></div>
+            <p class="nota-caderno__texto"><span id="maquina-texto"></span><span class="maquina__cursor" id="maquina-cursor"></span></p>
           </div>
-          <div class="polaroid" style="--rot:5deg; transform:rotate(5deg);">
-            <div class="midia midia-b">
-              <img src="imagens/sobre/polaroid-2.jpg" alt="Onde a vida vira conteúdo para Nadia Petra">
+
+          <div class="sobre__polaroids">
+            <!-- Fotos das polaroids. Pra trocar depois, é só substituir os arquivos
+                 imagens/sobre/polaroid-1.jpg e polaroid-2.jpg por outras com o mesmo nome. -->
+            <div class="polaroid" style="--rot:-6deg; transform:rotate(-6deg);">
+              <div class="midia midia-a">
+                <img src="imagens/sobre/polaroid-1.jpg" alt="De onde vêm as ideias de Nadia Petra">
+              </div>
+              <p class="polaroid__legenda" id="sobre-legenda-1"></p>
             </div>
-            <p class="polaroid__legenda" id="sobre-legenda-2"></p>
+            <div class="polaroid" style="--rot:5deg; transform:rotate(5deg);">
+              <div class="midia midia-b">
+                <img src="imagens/sobre/polaroid-2.jpg" alt="Onde a vida vira conteúdo para Nadia Petra">
+              </div>
+              <p class="polaroid__legenda" id="sobre-legenda-2"></p>
+            </div>
           </div>
-          <div class="post-it flutuante sobre__postit-flutuante" style="--rot:-3deg; transform:rotate(-3deg);" id="sobre-postit"></div>
         </div>
       </div>
     </div>
@@ -1112,13 +1118,11 @@ button.midia{
     <div class="container">
       <div class="cabecalho-secao revelar">
         <p class="rotulo-eyebrow">serviços</p>
-        <h2 class="titulo-secao">o que eu faço por marcas parceiras</h2>
-        <p class="subtitulo-secao">Cada ficha é um jeito diferente de contar a história do seu produto.</p>
+        <h2 class="titulo-secao" id="servicos-titulo"></h2>
+        <p class="subtitulo-secao" id="servicos-subtitulo"></p>
       </div>
       <div class="grade-servicos" id="grade-servicos"></div>
-      <div class="servicos__bilhete revelar" id="servicos-bilhete-wrap">
-        <div class="pin" style="top:-8px; left:50%; transform:translateX(-50%);"></div>
-      </div>
+      <p class="servicos__nota-processo revelar" id="servicos-nota-processo"></p>
     </div>
   </section>
 
@@ -1346,27 +1350,31 @@ const CONFIG = {
   // EDITE AQUI: seção sobre (scrapbook)
   sobre: {
     paragrafos: [
-      "Sou a Nádia, criadora de conteúdo UGC e apaixonada por transformar situações do cotidiano em histórias que conectam.",
+      "Sou a Nadia, criadora de conteúdo UGC e apaixonada por transformar situações do cotidiano em histórias que conectam.",
       "Minha inspiração vem da vida como ela é: maternidade, casa, autocuidado, natureza, beleza, moda e todas aquelas pequenas coisas que fazem parte da rotina.",
       "Transformo essas referências em vídeos com estética, personalidade e intenção de marca.",
       "Porque conexão acontece quando o conteúdo encontra um lugar natural na vida de quem está assistindo."
     ],
     legendaPolaroid1: "de onde vêm as ideias",
-    legendaPolaroid2: "onde a vida vira conteúdo",
-    postIt: "hoje: 3 vídeos, antes de levar o Teo pra escola"
+    legendaPolaroid2: "onde a vida vira conteúdo"
   },
 
-  // EDITE AQUI: serviços oferecidos, com preço em placeholder (troque os •••)
+  // EDITE AQUI: título e frase de apoio da seção de serviços
+  servicosTitulo: "o que eu entrego para marcas parceiras",
+  servicosSubtitulo: "Conteúdo estratégico, autêntico e visualmente marcante para conectar marcas à vida real.",
+
+  // EDITE AQUI: as 5 entregas oferecidas (sem preço nesta etapa, isso vem depois)
   servicos: [
-    { numero: "01", titulo: "ugc ads", descricao: "Vídeos verticais com gancho forte, pensados pra rodar como anúncio, com linguagem de indicação e não de comercial.", preco: "a partir de R$ •••" },
-    { numero: "02", titulo: "storytelling", descricao: "Roteiros e vídeos que contam uma pequena história em vez de listar características do produto.", preco: "a partir de R$ •••" },
-    { numero: "03", titulo: "creative direction", descricao: "Direção criativa completa da campanha, do conceito ao roteiro, mantendo a mesma cara e a mesma voz.", preco: "a partir de R$ •••" },
-    { numero: "04", titulo: "photography", descricao: "Ensaio de fotos de produto com composição, luz e cenário pensados pra combinar com a marca.", preco: "a partir de R$ •••" },
-    { numero: "05", titulo: "scripts", descricao: "Roteiros prontos pra você gravar com seu time ou com outros criadores, já testados na prática.", preco: "a partir de R$ •••" },
-    { numero: "06", titulo: "editing", descricao: "Edição de vídeos já gravados, com cortes dinâmicos, legenda e ritmo pensado pra prender atenção.", preco: "a partir de R$ •••" },
-    { numero: "07", titulo: "lifestyle content", descricao: "Conteúdo do dia a dia com o produto integrado na rotina, de forma natural, sem parecer publicidade.", preco: "a partir de R$ •••" }
+    { numero: "01", titulo: "ugc ads", descricao: "Vídeos verticais pensados para campanhas e anúncios, combinando ganchos fortes, demonstração do produto, naturalidade e intenção de venda." },
+    { numero: "02", titulo: "storytelling", descricao: "Seu produto inserido em uma história. Roteiro, narrativa e produção pensados para criar conexão e transformar o produto em parte de uma experiência." },
+    { numero: "03", titulo: "lifestyle content", descricao: "Conteúdo que parece vida real. Produtos inseridos naturalmente na rotina, com estética, espontaneidade e uma narrativa visual cuidadosa." },
+    { numero: "04", titulo: "marketplace video", descricao: "Vídeos objetivos e visualmente atrativos para apresentar produtos em marketplaces, e-commerces e páginas de produto, destacando características, benefícios e modo de uso." },
+    { numero: "05", titulo: "product photography", descricao: "Fotografia lifestyle de produtos, utilizando luz natural, composição e cenários reais para criar imagens que aproximam o produto do universo da marca." }
   ],
-  servicosBilhete: "obs: pacotes personalizados e parcerias de longo prazo sob consulta. fala comigo!",
+
+  // EDITE AQUI: nota discreta abaixo dos cards, explicando que roteiro, direção,
+  // gravação e edição já vêm inclusos em cada entrega (não são serviços à parte)
+  servicosNotaProcesso: "Todos os conteúdos incluem planejamento criativo, roteiro, direção, gravação e edição.",
 
   // EDITE AQUI: mural de vídeos. Estrutura em duas camadas: categoria > subcategoria > vídeos.
   // Cada vídeo tem a marca (aparece embaixo do vídeo) e o ID do vídeo do YouTube
@@ -1401,11 +1409,15 @@ const CONFIG = {
       categoria: "Fashion",
       subcategorias: [
         { nome: "Woman", videos: [
-          { marca: "Bella Donna", id: "HRIRK9gBgxM" }
+          { marca: "Bella Donna", id: "HRIRK9gBgxM" },
+          { marca: "Barriere", id: "97ghDCz8SxA" }
         ]},
         { nome: "Kids", videos: [
           { marca: "Bugbee", id: "m7tN0oCRLas" },
-          { marca: "Onda Marinha", id: "iDoCBl1SDLU" }
+          { marca: "Onda Marinha", id: "iDoCBl1SDLU" },
+          { marca: "Tip Toey Joey", id: "LBiEOKVzJpM" },
+          { marca: "Tip Toey Joey", id: "r4mYNTZWPCc" },
+          { marca: "Tip Toey Joey", id: "8-DmqQHuXww" }
         ]}
       ]
     },
@@ -1422,7 +1434,10 @@ const CONFIG = {
         ]},
         { nome: "Wellness", videos: [
           { marca: "Boiron", id: "4S9Y38gg7G4" },
-          { marca: "Gymnamic", id: "zwSfGkpzqgI" }
+          { marca: "Gymnamic", id: "zwSfGkpzqgI" },
+          { marca: "Fleur", id: "FayJYxiXbbY" },
+          { marca: "Beauty in", id: "TJPyzSYNNpo" },
+          { marca: "Beauty in", id: "IpYkPU0Akd4" }
         ]},
         { nome: "Finance", videos: [
           { marca: "Banco BV", id: "KbH_igpdgsY" },
@@ -1450,7 +1465,11 @@ const CONFIG = {
     {
       // EDITE AQUI: categoria ainda sem vídeos, adicione subcategorias quando tiver conteúdo
       categoria: "Garden",
-      subcategorias: []
+      subcategorias: [
+        { nome: "Gardening Products", videos: [
+          { marca: "Greenup", id: "a4LDyM-eXbc" }
+        ]}
+      ]
     },
     {
       categoria: "Kitchen",
@@ -1469,7 +1488,8 @@ const CONFIG = {
           { marca: "Natikos", id: "UmA2jq655-Q" },
           { marca: "Natikos", id: "NXqMWY6pPOg" },
           { marca: "Natikos", id: "byxXg0D2WrY" },
-          { marca: "Iracema", id: "tLEJHKclxyk" }
+          { marca: "Iracema", id: "tLEJHKclxyk" },
+          { marca: "Veneza", id: "VBLe24KdS1Y" }
         ]},
         { nome: "Recipes", videos: [
           { marca: "Andorinha", id: "hDQl4w4MhIY" },
@@ -1480,6 +1500,9 @@ const CONFIG = {
     {
       categoria: "Home",
       subcategorias: [
+        { nome: "Decor", videos: [
+          { marca: "Ripke", id: "YZ7JbBwmc10" }
+        ]},
         { nome: "Bedroom", videos: [
           { marca: "Luuna", id: "xBEpwGwPeNI" },
           { marca: "Luuna", id: "U0pxwgsF-QU" },
@@ -1494,7 +1517,8 @@ const CONFIG = {
           { marca: "Aquafast", id: "Naz0W7Ah1FY" }
         ]},
         { nome: "Appliances", videos: [
-          { marca: "Colormaq", id: "flcbOtRxaxA" }
+          { marca: "Colormaq", id: "flcbOtRxaxA" },
+          { marca: "Flape", id: "WvFSE9KjUGQ" }
         ]}
       ]
     }
@@ -1587,37 +1611,66 @@ function renderizarSobre(){
   }).join("");
   document.getElementById("sobre-legenda-1").textContent = CONFIG.sobre.legendaPolaroid1;
   document.getElementById("sobre-legenda-2").textContent = CONFIG.sobre.legendaPolaroid2;
-  document.getElementById("sobre-postit").textContent = CONFIG.sobre.postIt;
 }
 
 function renderizarServicos(){
+  document.getElementById("servicos-titulo").textContent = CONFIG.servicosTitulo;
+  document.getElementById("servicos-subtitulo").textContent = CONFIG.servicosSubtitulo;
+
   document.getElementById("grade-servicos").innerHTML = CONFIG.servicos.map(function(s){
     return `
       <div class="ficha revelar">
         <span class="ficha__etiqueta">${s.numero}</span>
         <h3>${s.titulo}</h3>
         <p>${s.descricao}</p>
-        <span class="ficha__preco">${s.preco}</span>
       </div>`;
   }).join("");
 
-  document.getElementById("servicos-bilhete-wrap").innerHTML +=
-    `<div class="post-it post-it--rosa">${CONFIG.servicosBilhete}</div>`;
+  document.getElementById("servicos-nota-processo").textContent = CONFIG.servicosNotaProcesso;
 }
 
-let categoriaMuralAtiva = 0;
+// "todos" é um valor especial (não é índice de CONFIG.mural). Qualquer
+// outro valor é uma string numérica ("0", "1"...) representando o índice
+// da categoria dentro de CONFIG.mural.
+let categoriaMuralAtiva = "todos";
 let subcategoriaMuralAtiva = 0;
+
+// Extrai o ID do YouTube de qualquer formato de link (shorts, watch, embed,
+// youtu.be) ou de um ID já "puro". Usado tanto na miniatura quanto no
+// player, pra garantir que os dois sempre usem o mesmo ID, não importa
+// como o vídeo foi cadastrado no CONFIG.
+function extrairIdVideoYoutube(entrada){
+  if (!entrada) return "";
+  const texto = String(entrada).trim();
+
+  if (/^[\w-]{11}$/.test(texto)) return texto;
+
+  const padroes = [
+    /youtube\.com\/shorts\/([\w-]{11})/,
+    /youtube\.com\/embed\/([\w-]{11})/,
+    /[?&]v=([\w-]{11})/,
+    /youtu\.be\/([\w-]{11})/
+  ];
+  for (const padrao of padroes){
+    const encontrado = texto.match(padrao);
+    if (encontrado) return encontrado[1];
+  }
+
+  return texto;
+}
 
 function renderizarCategoriasMural(){
   const container = document.getElementById("categorias-mural");
-  container.innerHTML = CONFIG.mural.map(function(cat, i){
-    return `<button class="filtro-nicho" data-indice="${i}" aria-pressed="${i === categoriaMuralAtiva ? "true" : "false"}">${cat.categoria}</button>`;
+  const botaoTodos = `<button class="filtro-nicho" data-indice="todos" aria-pressed="${categoriaMuralAtiva === "todos" ? "true" : "false"}">Todos</button>`;
+  const botoesCategorias = CONFIG.mural.map(function(cat, i){
+    return `<button class="filtro-nicho" data-indice="${i}" aria-pressed="${categoriaMuralAtiva === String(i) ? "true" : "false"}">${cat.categoria}</button>`;
   }).join("");
+  container.innerHTML = botaoTodos + botoesCategorias;
 
   container.addEventListener("click", function(e){
     const botao = e.target.closest(".filtro-nicho");
     if (!botao) return;
-    categoriaMuralAtiva = Number(botao.dataset.indice);
+    categoriaMuralAtiva = botao.dataset.indice;
     subcategoriaMuralAtiva = 0;
     container.querySelectorAll(".filtro-nicho").forEach(function(b){
       b.setAttribute("aria-pressed", b === botao ? "true" : "false");
@@ -1629,7 +1682,15 @@ function renderizarCategoriasMural(){
 
 function renderizarSubcategoriasMural(){
   const container = document.getElementById("subcategorias-mural");
-  const subcategorias = CONFIG.mural[categoriaMuralAtiva].subcategorias;
+
+  // "Todos" mostra tudo de uma vez, sem filtro de subcategoria.
+  if (categoriaMuralAtiva === "todos"){
+    container.innerHTML = "";
+    container.hidden = true;
+    return;
+  }
+
+  const subcategorias = CONFIG.mural[Number(categoriaMuralAtiva)].subcategorias;
 
   if (subcategorias.length === 0){
     container.innerHTML = "";
@@ -1646,8 +1707,21 @@ function renderizarSubcategoriasMural(){
 function renderizarVideosMural(){
   const grade = document.getElementById("mural-portfolio");
   const vazio = document.getElementById("mural-vazio");
-  const subcategorias = CONFIG.mural[categoriaMuralAtiva].subcategorias;
-  const videos = subcategorias.length > 0 ? subcategorias[subcategoriaMuralAtiva].videos : [];
+
+  let videos;
+  if (categoriaMuralAtiva === "todos"){
+    // Junta os vídeos de todas as categorias e subcategorias, sem repetir
+    // nem esquecer nenhum.
+    videos = [];
+    CONFIG.mural.forEach(function(cat){
+      cat.subcategorias.forEach(function(sub){
+        videos = videos.concat(sub.videos);
+      });
+    });
+  } else {
+    const subcategorias = CONFIG.mural[Number(categoriaMuralAtiva)].subcategorias;
+    videos = subcategorias.length > 0 ? subcategorias[subcategoriaMuralAtiva].videos : [];
+  }
 
   if (videos.length === 0){
     grade.innerHTML = "";
@@ -1660,10 +1734,11 @@ function renderizarVideosMural(){
   const gradientes = ["midia-a","midia-b","midia-c","midia-d"];
   grade.innerHTML = videos.map(function(video, i){
     const g = gradientes[i % gradientes.length];
+    const idVideo = extrairIdVideoYoutube(video.id);
     return `
       <div class="polaroid">
-        <button class="midia ${g}" type="button" data-video-id="${video.id}" aria-label="Reproduzir vídeo da marca ${video.marca} no YouTube">
-          <img src="https://img.youtube.com/vi/${video.id}/hqdefault.jpg" alt="" loading="lazy">
+        <button class="midia ${g}" type="button" data-video-id="${idVideo}" aria-label="Reproduzir vídeo da marca ${video.marca} no YouTube">
+          <img src="https://img.youtube.com/vi/${idVideo}/hqdefault.jpg" alt="" loading="lazy">
           <span class="midia__play" aria-hidden="true"></span>
         </button>
         <p class="polaroid__legenda">${video.marca}</p>
@@ -1701,7 +1776,13 @@ function abrirVideoModal(videoId, titulo, botaoOrigem){
   const fundo = document.getElementById("video-modal-fundo");
   const player = document.getElementById("video-modal-player");
   elementoComFocoAntesDoVideo = botaoOrigem || document.activeElement;
-  player.innerHTML = `<iframe src="https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0" title="${titulo}" referrerpolicy="origin" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>`;
+
+  const idFinal = extrairIdVideoYoutube(videoId);
+  // Sem autoplay de propósito: alguns navegadores bloqueiam autoplay com
+  // áudio e isso é o que fazia parecer que o vídeo "não tocava". Assim o
+  // player do YouTube sempre carrega normal e a pessoa clica em play.
+  const src = `https://www.youtube.com/embed/${idFinal}?rel=0&playsinline=1`;
+  player.innerHTML = `<iframe src="${src}" title="${titulo}" referrerpolicy="origin" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>`;
   fundo.classList.add("aberto");
   document.getElementById("video-modal-fechar").focus();
 }
