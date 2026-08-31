@@ -601,7 +601,200 @@ a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,
 }
 
 /* =====================================================================
-   SERVIÇOS — fichas de pasta de arquivo
+   FAIXA DE MARCAS — números de confiança + logos
+   =====================================================================*/
+.faixa-marcas{padding:56px 0;}
+.faixa-marcas__numeros{
+  display:flex; align-items:center; justify-content:center;
+  gap:24px; flex-wrap:wrap;
+  text-align:center;
+  margin-bottom:38px;
+}
+.faixa-marcas__numeros p{font-family:var(--f-sans); font-size:.95rem; color:var(--tinta-suave);}
+.faixa-marcas__numeros strong{
+  font-family:var(--f-display);
+  font-size:1.4rem;
+  font-weight:700;
+  color:var(--carimbo);
+  margin-right:6px;
+}
+.faixa-marcas__separador{width:1px; height:28px; background:rgba(58,46,34,.2);}
+/* Cada logo fica dentro de um cartão do mesmo tamanho, então mesmo vindo
+   em formatos/proporções diferentes (jpg, png, webp, retangular, quadrada),
+   tudo fica visualmente padronizado sem precisar editar o arquivo da logo.
+   A fileira rola sozinha, tipo um rodapé de logos, pra caber todas numa
+   linha só sem espremer em telas menores. */
+.faixa-marcas__logos{
+  width:100%;
+  overflow:hidden;
+  mask-image:linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
+  -webkit-mask-image:linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
+}
+.faixa-marcas__logos-trilho{
+  display:flex;
+  width:max-content;
+  gap:16px;
+  animation:rolar-logos 32s linear infinite;
+}
+.faixa-marcas__logos:hover .faixa-marcas__logos-trilho{animation-play-state:paused;}
+@keyframes rolar-logos{
+  from{transform:translateX(0);}
+  to{transform:translateX(-50%);}
+}
+.faixa-marcas__logo-cartao{
+  background:var(--branco);
+  border-radius:var(--raio-peq);
+  box-shadow:0 8px 20px -14px var(--sombra);
+  height:78px;
+  width:150px;
+  flex-shrink:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:14px 18px;
+}
+.faixa-marcas__logo-cartao img{
+  max-width:100%;
+  max-height:100%;
+  width:auto; height:auto;
+  object-fit:contain;
+}
+.faixa-marcas__vazio{color:var(--tinta-suave); font-size:.85rem; text-align:center;}
+@media (max-width:640px){
+  .faixa-marcas__separador{display:none;}
+}
+
+/* =====================================================================
+   SERVIÇOS — foto grande com o nome dela e os serviços flutuando ao redor
+   =====================================================================*/
+.servicos-nova{padding:70px 0 90px;}
+.servicos-nova__cena{
+  position:relative;
+  max-width:640px;
+  margin:0 auto;
+  text-align:center;
+}
+.servicos-nova__intro-linha{
+  display:flex;
+  justify-content:space-between;
+  font-family:var(--f-sans);
+  font-size:.92rem;
+  color:var(--tinta-suave);
+  padding:0 4px;
+}
+.servicos-nova__titulo{
+  position:relative;
+  z-index:0;
+  font-family:var(--f-display);
+  font-size:clamp(3.2rem, 12vw, 6.4rem);
+  line-height:.95;
+  color:var(--tinta);
+  margin:0;
+  text-transform:none;
+}
+.servicos-nova__foto-wrap{
+  position:relative;
+  z-index:1;
+  width:min(70vw, 300px);
+  aspect-ratio:3/4;
+  margin:-2.6rem auto 0;
+}
+.servicos-nova__foto{
+  width:100%; height:100%;
+  border-radius:var(--raio-peq);
+  overflow:hidden;
+  background:linear-gradient(160deg, var(--azul-medio), var(--bege-escuro));
+}
+.servicos-nova__foto img{
+  width:100%; height:100%;
+  object-fit:contain;
+  object-position:bottom center;
+  display:block;
+}
+.servicos-nova__tags{position:absolute; inset:0; pointer-events:none;}
+.servicos-nova__tag{
+  position:absolute;
+  pointer-events:auto;
+  display:flex;
+  flex-wrap:wrap;
+  align-items:baseline;
+  gap:0 8px;
+  max-width:190px;
+  background:var(--branco);
+  border:none;
+  border-radius:16px;
+  padding:9px 15px;
+  box-shadow:0 12px 26px -14px var(--sombra-forte);
+  cursor:pointer;
+  text-align:left;
+  transition:box-shadow .2s ease;
+}
+.servicos-nova__tag-numero{
+  font-family:var(--f-display);
+  font-weight:700;
+  font-size:.82rem;
+  color:var(--carimbo);
+}
+.servicos-nova__tag-nome{
+  font-family:var(--f-sans);
+  font-weight:600;
+  font-size:.86rem;
+  color:var(--tinta);
+  white-space:nowrap;
+}
+.servicos-nova__tag-descricao{
+  display:block;
+  width:100%;
+  max-height:0;
+  overflow:hidden;
+  font-family:var(--f-sans);
+  font-size:.78rem;
+  line-height:1.45;
+  color:var(--tinta-suave);
+  transition:max-height .3s ease, margin-top .25s ease;
+}
+.servicos-nova__tag:hover,
+.servicos-nova__tag:focus-visible,
+.servicos-nova__tag.aberto{box-shadow:0 18px 34px -14px var(--sombra-forte); z-index:5;}
+.servicos-nova__tag:hover .servicos-nova__tag-descricao,
+.servicos-nova__tag:focus-visible .servicos-nova__tag-descricao,
+.servicos-nova__tag.aberto .servicos-nova__tag-descricao{
+  max-height:150px;
+  margin-top:6px;
+}
+.servicos-nova__rodape{
+  margin-top:52px;
+  padding-top:24px;
+  border-top:1px dashed rgba(58,46,34,.2);
+  font-family:var(--f-sans);
+  font-size:.85rem;
+  color:var(--tinta-suave);
+}
+
+@media (min-width:761px){
+  .servicos-nova__tag--0{top:2%; left:-8%;}
+  .servicos-nova__tag--1{top:2%; right:-10%;}
+  .servicos-nova__tag--2{top:48%; left:-16%;}
+  .servicos-nova__tag--3{top:44%; right:-17%;}
+  .servicos-nova__tag--4{bottom:-3%; left:50%; transform:translateX(-50%);}
+}
+
+/* No celular não tem espaço pra flutuar em volta da foto: os serviços
+   viram uma listinha simples embaixo, e o toque abre/fecha a descrição. */
+@media (max-width:760px){
+  .servicos-nova__foto-wrap{width:min(78vw, 320px);}
+  .servicos-nova__tags{
+    position:static;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    margin-top:26px;
+  }
+  .servicos-nova__tag{position:static; max-width:none; width:100%;}
+}
+
+/* =====================================================================
+   fichas antigas de serviço (sem uso agora, mantidas por segurança)
    =====================================================================*/
 .grade-servicos{
   display:grid;
@@ -762,40 +955,62 @@ button.midia{
   padding:30px 26px 28px;
   box-shadow:0 16px 26px -10px var(--sombra);
   overflow:hidden;
+  border-radius:var(--raio);
 }
-.relatorio__cabecalho{
-  display:flex; justify-content:space-between; align-items:flex-start; gap:12px;
+.relatorio h3{font-family:var(--f-display); text-transform:uppercase; letter-spacing:.03em; font-size:1.1rem; margin-top:2px;}
+
+/* vídeo do case, igual aos cards do mural, mas sangrando até a borda do card */
+.relatorio__video{
+  position:relative;
+  display:block;
+  width:calc(100% + 52px);
+  margin:-30px -26px 18px;
+  aspect-ratio:4/5;
+  border:none;
+  padding:0;
+  cursor:pointer;
+  background:var(--azul-medio);
 }
-.relatorio__nicho{
-  font-family:var(--f-datilografia);
-  font-size:.72rem;
-  color:var(--tinta-suave);
+.relatorio__video img{width:100%; height:100%; object-fit:cover; display:block;}
+
+.relatorio__metricas-lista{
+  list-style:none;
+  margin:16px 0 0;
+  padding-top:14px;
+  border-top:1px dashed rgba(58,46,34,.2);
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+.relatorio__metricas-lista li{
+  display:flex;
+  flex-direction:column;
+  gap:2px;
+}
+.relatorio__numero{
+  font-family:var(--f-display);
+  font-weight:700;
+  font-size:2.1rem;
+  line-height:1;
+  color:var(--carimbo);
+  font-variant-numeric:tabular-nums;
+}
+.relatorio__rotulo{
+  font-family:var(--f-sans);
+  font-weight:600;
+  font-size:.78rem;
   text-transform:uppercase;
   letter-spacing:.08em;
+  color:var(--tinta-suave);
 }
-.relatorio h3{font-family:var(--f-display); text-transform:lowercase; font-size:1.2rem; margin-top:4px;}
-.relatorio__descricao{margin-top:12px; font-size:.92rem; color:var(--tinta-suave);}
-.relatorio__grafico{
-  display:flex; align-items:flex-end; gap:10px;
-  height:70px;
-  margin:22px 0 4px;
+
+/* o carimbo "aprovado" vira um selinho sobre o canto do vídeo */
+.relatorio .carimbo{
+  position:absolute;
+  top:14px; left:14px;
+  z-index:2;
+  margin-bottom:0;
 }
-.relatorio__grafico span{
-  flex:1;
-  background:linear-gradient(180deg, var(--azul-medio), var(--azul-escuro));
-  border-radius:3px 3px 0 0;
-}
-.relatorio__metricas{
-  display:grid; grid-template-columns:repeat(3,1fr);
-  gap:8px;
-  margin-top:14px;
-}
-.relatorio__metrica{
-  font-family:var(--f-datilografia);
-  text-align:center;
-}
-.relatorio__metrica strong{display:block; font-size:1.05rem; color:var(--tinta);}
-.relatorio__metrica span{font-size:.68rem; color:var(--tinta-suave);}
 .relatorio .carimbo{top:20px; right:-6px;}
 
 /* =====================================================================
@@ -884,11 +1099,18 @@ button.midia{
   box-shadow:0 16px 26px -10px var(--sombra);
 }
 .carta__foto{
+  position:relative;
   width:76px; height:76px; border-radius:50%;
   background:linear-gradient(155deg, var(--azul-medio), var(--bege-escuro));
   border:4px solid var(--branco);
   box-shadow:0 10px 16px -6px var(--sombra);
   margin-bottom:18px;
+  overflow:hidden;
+}
+.carta__foto img{
+  position:absolute; inset:0;
+  width:100%; height:100%;
+  object-fit:cover;
 }
 .carta__texto{white-space:pre-line; color:var(--tinta-suave); font-size:1rem;}
 .carta__assinatura{
@@ -1250,9 +1472,25 @@ button.midia{
   </section>
 
   <!-- =====================================================
+       FAIXA DE MARCAS — números de confiança + logos
+  ===================================================== -->
+  <section class="folha folha--off faixa-marcas">
+    <div class="container">
+      <div class="faixa-marcas__numeros revelar">
+        <p><strong id="faixa-marcas-numero-1"></strong><span id="faixa-marcas-texto-1"></span></p>
+        <span class="faixa-marcas__separador"></span>
+        <p><strong id="faixa-marcas-numero-2"></strong><span id="faixa-marcas-texto-2"></span></p>
+      </div>
+      <!-- Logos das marcas. Pra adicionar/trocar, coloque os arquivos em
+           imagens/marcas/ e edite a lista logosMarcas no topo do <script>. -->
+      <div class="faixa-marcas__logos revelar revelar-d1" id="faixa-marcas-logos"></div>
+    </div>
+  </section>
+
+  <!-- =====================================================
        5. SERVIÇOS — fichas de pasta de arquivo
   ===================================================== -->
-  <section id="servicos" class="folha folha--azul">
+  <section id="servicos" class="folha folha--azul servicos-nova">
     <div class="container">
       <div class="cabecalho-secao revelar">
         <p class="rotulo-eyebrow">serviços</p>
@@ -1305,7 +1543,7 @@ button.midia{
     <div class="container">
       <div class="cabecalho-secao revelar">
         <p class="rotulo-eyebrow">feedbacks</p>
-        <h2 class="titulo-secao">o que as marcas deixaram de bilhete</h2>
+        <h2 class="titulo-secao">feedback das marcas</h2>
       </div>
       <div class="mural-feedbacks" id="mural-feedbacks"></div>
     </div>
@@ -1341,7 +1579,9 @@ button.midia{
           <div class="clipe" style="top:-6px; right:24px; transform:rotate(12deg);">
             <svg viewBox="0 0 24 40" fill="none" stroke="#8a8a82" stroke-width="2.4"><path d="M12 4v22a5 5 0 0 1-10 0V10a3 3 0 0 1 6 0v16"/></svg>
           </div>
-          <div class="carta__foto" role="img" id="carta-foto-alt"></div>
+          <div class="carta__foto">
+            <img src="imagens/contato/foto-carta.jpg" alt="Foto de Nadia Petra" id="carta-foto-alt">
+          </div>
           <p class="carta__texto" id="carta-texto"></p>
           <p class="carta__assinatura" id="carta-assinatura"></p>
           <div class="redes-sociais" id="redes-sociais-contato"></div>
@@ -1496,6 +1736,31 @@ const CONFIG = {
     legendaPolaroid1: "de onde vêm as ideias",
     legendaPolaroid2: "onde a vida vira conteúdo"
   },
+
+  // EDITE AQUI: números de confiança e logos da faixa entre "sobre" e "serviços"
+  faixaMarcas: {
+    numero1: "+ de 200",
+    texto1: " marcas contrataram",
+    numero2: "+ de 80%",
+    texto2: " recontrataram"
+  },
+  // Coloque os arquivos de logo em imagens/marcas/ e liste eles aqui
+  logosMarcas: [
+    { arquivo: "Pantene-Logo-2016-presente - Editado.jpg", alt: "Pantene" },
+    { arquivo: "amazon.jpg", alt: "Amazon" },
+    { arquivo: "bioderma.jpg", alt: "Bioderma" },
+    { arquivo: "brinox.jpg", alt: "Brinox" },
+    { arquivo: "citroen.jpg", alt: "Citroen" },
+    { arquivo: "delicia.jpg", alt: "Delícia" },
+    { arquivo: "disney4 - Editado.png", alt: "Disney" },
+    { arquivo: "luuna - Editado.png", alt: "Luuna" },
+    { arquivo: "mam - Editado.jpg", alt: "MAM" },
+    { arquivo: "mercad'o - Editado.png", alt: "Mercado Livre" },
+    { arquivo: "nadir.jpg", alt: "Nadir" },
+    { arquivo: "natura - Editado.png", alt: "Natura" },
+    { arquivo: "open english junior.jpg", alt: "Open English Jr" },
+    { arquivo: "shein.png", alt: "Shein" }
+  ],
 
   // EDITE AQUI: título e frase de apoio da seção de serviços
   servicosTitulo: "o que eu entrego para marcas parceiras",
@@ -1677,19 +1942,21 @@ const CONFIG = {
   ],
 
   // EDITE AQUI: cases (exemplos fictícios, troque pelos seus reais)
+  // EDITE AQUI: cases reais, com o vídeo do trabalho e os números de resultado
   cases: [
-    { marca: "Nuvem Skincare", nicho: "skincare", descricao: "Série de 6 vídeos UGC mostrando a rotina completa de uma linha de skincare, com foco em antes e depois.", barras: [40, 65, 90], metricas: [ { numero: "+340%", rotulo: "cliques no link" }, { numero: "2,1M", rotulo: "visualizações" }, { numero: "12%", rotulo: "conversão em anúncio" } ] },
-    { marca: "Raiz Alimentos", nicho: "lifestyle", descricao: "Conteúdo de lifestyle mostrando o produto integrado numa rotina real de manhã corrida.", barras: [50, 55, 85], metricas: [ { numero: "+180%", rotulo: "engajamento" }, { numero: "890 mil", rotulo: "alcance orgânico" }, { numero: "4,8/5", rotulo: "nota pós-campanha" } ] },
-    { marca: "Trilha Ativa", nicho: "wellness", descricao: "Vídeo de storytelling ligando o produto a um ritual de autocuidado, usado como anúncio em vídeo.", barras: [70, 45, 95], metricas: [ { numero: "-28%", rotulo: "custo por resultado" }, { numero: "3,4x", rotulo: "retorno sobre mídia" }, { numero: "45 mil", rotulo: "novos seguidores" } ] }
+    { marca: "Andorinha", id: "hDQl4w4MhIY", metricas: [{ numero: "+470 mil", rotulo: "visualizações" }] },
+    { marca: "Citroen", id: "rQ3063TeY9M", metricas: [{ numero: "+5,6 milhões", rotulo: "visualizações" }] },
+    { marca: "Tip Toey Joey", id: "UGY9KUtOABk", metricas: [{ numero: "+380 mil", rotulo: "visualizações" }] }
   ],
 
   // EDITE AQUI: depoimentos de clientes (exemplos, troque pelos reais)
+  // EDITE AQUI: depoimentos reais das marcas (sem nome de contato, só a marca)
   feedbacks: [
-    { texto: "A Nadia entendeu o tom da nossa marca antes mesmo de eu explicar direito.", nome: "Marina Duarte", empresa: "Nuvem Skincare" },
-    { texto: "Entregou no prazo, com muita criatividade, e ainda sugeriu melhorias no roteiro.", nome: "Diego Ramos", empresa: "Raiz Alimentos" },
-    { texto: "O conteúdo rodou como anúncio e teve o melhor CTR da campanha inteira.", nome: "Camila Ferraz", empresa: "Trilha Ativa" },
-    { texto: "Profissional, organizada e com um olhar estético que fez toda diferença nas fotos.", nome: "Beatriz Lins", empresa: "Vila Moda" },
-    { texto: "A gente pediu um vídeo e recebeu uma pequena obra de arte que ainda vendeu muito bem.", nome: "Pedro Aguiar", empresa: "Urbano Fit" }
+    { texto: "Bom dia, Nadia! Vim dar um feedback especificamente deste vídeo seu. Ele performou de uma maneira nunca vista antes por aqui, muito obrigada mesmo pela entrega, conseguimos mais de 200 novos leads com ele! Muito obrigada mesmo pela parceria.", nome: "", empresa: "Open English JR" },
+    { texto: "A Nadia é incrível! Amamos trabalhar com ela, é super organizada com as datas e entregas e entendeu perfeitamente a ideia que queríamos passar. Não foi necessário nenhum ajuste após o envio, arrasou!", nome: "", empresa: "Grupo Açucena" },
+    { texto: "Ótima experiência trabalhar com a Nadia, recomendo muito. Profissional super dedicada e com uma entrega excelente.", nome: "", empresa: "Cygnuss Lingerie" },
+    { texto: "Excelente experiência com a Nadia. Profissional organizada, comprometida com prazos e muito cuidadosa em seguir o briefing e com o evento. Com certeza pretendemos realizar novas ações juntas.", nome: "", empresa: "Mape Digital" },
+    { texto: "Eu amei a entrega, muito rápida em todos os processos. Por ela já entender um pouco do tema, fez um roteiro excelente. Super recomendo e vou contratar novamente.", nome: "", empresa: "Missão Alemão" }
   ],
 
   // EDITE AQUI: perguntas frequentes
@@ -1703,7 +1970,7 @@ const CONFIG = {
 
   // EDITE AQUI: texto da carta de contato
   contato: {
-    texto: "Oi! Que bom que você chegou até aqui.\n\nSe você tem uma marca e quer um conteúdo que pareça indicação de amiga, e não comercial forçado, bora conversar. Conta um pouco do seu projeto no envelope ao lado, ou me chama direto no whatsapp.\n\nCom carinho e um café do lado,",
+    texto: "Oi! Que bom que você chegou até aqui.\n\nSe você tem uma marca e quer um conteúdo que pareça indicação de amiga, e não comercial forçado, bora conversar. Conta um pouco do seu projeto no envelope ao lado, ou me chama direto no whatsapp.\n\nCom carinho,",
     assinatura: "Nadia.",
     descricaoFoto: "Foto redonda de Nadia Petra"
   },
@@ -1762,6 +2029,25 @@ function renderizarSobre(){
     return "<p>" + p + "</p>";
   }).join("");
   document.getElementById("sobre-legenda-2").textContent = CONFIG.sobre.legendaPolaroid2;
+}
+
+function renderizarFaixaMarcas(){
+  document.getElementById("faixa-marcas-numero-1").textContent = CONFIG.faixaMarcas.numero1;
+  document.getElementById("faixa-marcas-texto-1").textContent = CONFIG.faixaMarcas.texto1;
+  document.getElementById("faixa-marcas-numero-2").textContent = CONFIG.faixaMarcas.numero2;
+  document.getElementById("faixa-marcas-texto-2").textContent = CONFIG.faixaMarcas.texto2;
+
+  const container = document.getElementById("faixa-marcas-logos");
+  if (!CONFIG.logosMarcas || CONFIG.logosMarcas.length === 0){
+    container.innerHTML = '<p class="faixa-marcas__vazio">Logos chegando em breve.</p>';
+    return;
+  }
+  const cartoes = CONFIG.logosMarcas.map(function(l){
+    return `<div class="faixa-marcas__logo-cartao"><img src="imagens/marcas/${encodeURIComponent(l.arquivo)}" alt="${l.alt}" loading="lazy"></div>`;
+  }).join("");
+  // Duas cópias lado a lado criam a rolagem infinita (igual à faixa de marcas
+  // usada em outro lugar do site).
+  container.innerHTML = `<div class="faixa-marcas__logos-trilho">${cartoes}${cartoes}</div>`;
 }
 
 function renderizarServicos(){
@@ -1948,6 +2234,14 @@ function fecharVideoModal(){
 
 function iniciarVideoModal(){
   const fundo = document.getElementById("video-modal-fundo");
+
+  // Vídeos dos cases (seção "Cases") abrem no mesmo player grande do mural.
+  document.getElementById("grade-cases").addEventListener("click", function(e){
+    const botao = e.target.closest("[data-video-id]");
+    if (!botao) return;
+    abrirVideoModal(botao.dataset.videoId, botao.getAttribute("aria-label"), botao);
+  });
+
   document.getElementById("video-modal-fechar").addEventListener("click", fecharVideoModal);
   fundo.addEventListener("click", function(e){
     if (e.target === fundo) fecharVideoModal();
@@ -1959,22 +2253,18 @@ function iniciarVideoModal(){
 
 function renderizarCases(){
   document.getElementById("grade-cases").innerHTML = CONFIG.cases.map(function(c){
-    const barras = c.barras.map(function(altura){ return `<span style="height:${altura}%"></span>`; }).join("");
     const metricas = c.metricas.map(function(m){
-      return `<div class="relatorio__metrica"><strong>${m.numero}</strong><span>${m.rotulo}</span></div>`;
+      return `<li><span class="relatorio__numero">${m.numero}</span><span class="relatorio__rotulo">${m.rotulo}</span></li>`;
     }).join("");
     return `
       <article class="relatorio revelar">
         <span class="carimbo">aprovado</span>
-        <div class="relatorio__cabecalho">
-          <div>
-            <p class="relatorio__nicho">${c.nicho}</p>
-            <h3>${c.marca}</h3>
-          </div>
-        </div>
-        <p class="relatorio__descricao">${c.descricao}</p>
-        <div class="relatorio__grafico">${barras}</div>
-        <div class="relatorio__metricas">${metricas}</div>
+        <button class="relatorio__video" type="button" data-video-id="${c.id}" aria-label="Assistir o vídeo do case da marca ${c.marca}">
+          <img src="https://img.youtube.com/vi/${c.id}/hqdefault.jpg" alt="" loading="lazy">
+          <span class="midia__play" aria-hidden="true"></span>
+        </button>
+        <h3>${c.marca}</h3>
+        <ul class="relatorio__metricas-lista">${metricas}</ul>
       </article>`;
   }).join("");
 }
@@ -1982,11 +2272,12 @@ function renderizarCases(){
 function renderizarFeedbacks(){
   const rotacoes = [-4,3,-2,5,-6,2];
   document.getElementById("mural-feedbacks").innerHTML = CONFIG.feedbacks.map(function(f, i){
+    const autor = f.nome ? `${f.nome}, ${f.empresa}` : f.empresa;
     return `
       <div class="bilhete-feedback revelar" style="transform:rotate(${rotacoes[i % rotacoes.length]}deg)">
         <div class="pin" style="top:-8px; left:50%; transform:translateX(-50%);"></div>
         <p class="bilhete-feedback__texto">"${f.texto}"</p>
-        <p class="bilhete-feedback__autor">${f.nome}, ${f.empresa}</p>
+        <p class="bilhete-feedback__autor">${autor}</p>
       </div>`;
   }).join("");
 }
@@ -2029,7 +2320,6 @@ function renderizarContato(){
     <a href="https://wa.me/${id.whatsappNumero}" target="_blank" rel="noopener noreferrer">${ICONES.whatsapp} whatsapp</a>
     <a href="mailto:${id.email}">${ICONES.email} e-mail</a>
     <a href="${id.instagramUrl}" target="_blank" rel="noopener noreferrer">${ICONES.instagram} instagram</a>
-    <a href="${id.telegramUrl}" target="_blank" rel="noopener noreferrer">${ICONES.telegram} telegram</a>
   `;
 }
 
@@ -2197,6 +2487,7 @@ document.addEventListener("DOMContentLoaded", function(){
   renderizarCabecalho();
   renderizarHero();
   renderizarSobre();
+  renderizarFaixaMarcas();
   renderizarServicos();
   renderizarCategoriasMural();
   renderizarSubcategoriasMural();
