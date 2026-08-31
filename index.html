@@ -6,10 +6,10 @@
 <title>Nadia Petra . mesa criativa</title>
 <meta name="description" content="Nadia Petra, criadora de conteúdo UGC. Um mural digital do jeito que a mesa dela realmente é.">
 
-<!-- Fontes do Google Fonts: máquina de escrever, sans clean, display bold e manuscrita -->
+<!-- TESTE VISUAL: paleta terracota/oliva/creme, serifa elegante + sans limpa -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Space+Grotesk:wght@400;500;600;700&family=Archivo+Black&family=Caveat:wght@500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Poppins:wght@400;500;600;700&family=Caveat:wght@500;700&display=swap" rel="stylesheet">
 
 <style>
 /* =====================================================================
@@ -18,41 +18,46 @@
    marrom escura no lugar de preto puro (fica mais "papel").
    ===================================================================== */
 :root{
-  --azul-claro:#cfdce6;
-  --azul-medio:#aec4d5;
-  --azul-escuro:#6f8ea0;
-  --branco:#fdfcf8;
-  --off-white:#f6f1e6;
-  --bege:#ece1c9;
-  --bege-escuro:#d7c39c;
-  --cinza-claro:#dedad2;
-  --tinta:#2e2b26;
-  --tinta-suave:#5b574d;
-  --sombra:rgba(35,30,20,.22);
-  --sombra-forte:rgba(30,25,18,.32);
-  --postit:#f4e29c;
-  --postit-rosa:#f0c9c2;
-  --fita-azul:#cfe1e6;
-  --fita-rosa:#e9cdc6;
-  --carimbo:#a3432c;
-  --xadrez-fundo:#f5f0e2;
-  --xadrez-linha:rgba(138,171,106,.46);
+  /* EDITE AQUI: essa é a paleta do teste visual (terracota + oliva + creme).
+     Os nomes das variáveis ficaram os mesmos de antes (--azul-claro, --carimbo
+     etc.) só pra não precisar reescrever o CSS inteiro, mas os valores agora
+     são outros. Se quiser ajustar algum tom, é só mexer aqui. */
+  --azul-claro:#c7cbb0;
+  --azul-medio:#97a377;
+  --azul-escuro:#5c6b4a;
+  --branco:#fbf7ef;
+  --off-white:#f3ead9;
+  --bege:#e8dcc4;
+  --bege-escuro:#cdb68c;
+  --cinza-claro:#ded7c7;
+  --tinta:#3a2e22;
+  --tinta-suave:#6e5f4c;
+  --sombra:rgba(58,46,34,.16);
+  --sombra-forte:rgba(50,38,26,.26);
+  --postit:#e6d3a1;
+  --postit-rosa:#e3b9a6;
+  --fita-azul:#c7cbb0;
+  --fita-rosa:#e3b9a6;
+  --carimbo:#bd5b3a;
+  --xadrez-fundo:#f1e8d8;
+  --xadrez-linha:rgba(92,107,74,.4);
   --xadrez-textura:rgba(255,255,255,.05);
-  --xadrez-peek:#9fb883;
+  --xadrez-peek:#7c8f5e;
 
-  --f-datilografia:'Special Elite', 'Courier New', monospace;
-  --f-sans:'Space Grotesk', sans-serif;
-  --f-display:'Archivo Black', sans-serif;
+  --f-datilografia:'Poppins', sans-serif;
+  --f-sans:'Poppins', sans-serif;
+  --f-display:'Fraunces', serif;
   --f-manuscrita:'Caveat', cursive;
 
-  --raio:18px;
+  --raio:24px;
+  --raio-peq:14px;
 }
 
 *,*::before,*::after{box-sizing:border-box;}
 html{scroll-behavior:smooth;scroll-padding-top:110px;}
 body{
   margin:0;
-  background:var(--azul-claro);
+  background:var(--xadrez-fundo);
   color:var(--tinta);
   font-family:var(--f-sans);
   line-height:1.6;
@@ -601,14 +606,20 @@ a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,
 .grade-servicos{
   display:grid;
   grid-template-columns:repeat(auto-fill,minmax(230px,1fr));
-  gap:26px;
+  gap:18px;
 }
 .ficha{
   position:relative;
   background:var(--branco);
-  padding:38px 22px 24px;
+  padding:42px 18px 30px;
   box-shadow:0 14px 24px -10px var(--sombra);
   transition:transform .3s ease;
+  display:flex;
+  flex-direction:column;
+}
+@media (min-width:900px){
+  .grade-servicos{grid-template-columns:repeat(5, 1fr);}
+  .ficha{min-height:340px;}
 }
 .ficha:hover{transform:translateY(-6px);}
 .ficha__etiqueta{
@@ -1024,6 +1035,148 @@ button.midia{
   .folha{padding:64px 0;}
   .caixa{padding:56px 14px 30px;}
 }
+
+/* =====================================================================
+   TESTE VISUAL — ajustes por cima do visual original de "mesa criativa",
+   pra aproximar da referência: mais limpo, sem fita/clipe/carimbo batido/
+   rotação espalhada, com cores terracota + oliva + creme.
+   EDITE AQUI se quiser voltar atrás em algum desses pontos.
+   ===================================================================== */
+
+/* esconde os adereços de scrapbook que não combinam com o visual novo */
+.fita, .fita-mesa, .clipe, .pin{display:none;}
+
+/* fundo das seções: cor sólida no lugar do xadrez */
+.folha--azul{background-image:none; background-color:var(--off-white);}
+.folha--azul::before{background:var(--azul-medio);}
+.folha--azul::after{background:var(--bege-escuro);}
+.hero{background:var(--xadrez-fundo);}
+
+/* tira a rotação "espalhada" dos cards, fica tudo alinhado e limpo */
+.polaroid,
+.bilhete-feedback{transform:none !important;}
+.mural .polaroid:hover{transform:scale(1.04) !important;}
+
+/* polaroid vira um card de foto limpo, sem moldura grossa nem rodapé branco */
+.polaroid{
+  background:none;
+  padding:0;
+  box-shadow:none;
+  border-radius:var(--raio-peq);
+  overflow:hidden;
+}
+.mural .polaroid{overflow:visible;}
+.mural .polaroid .midia{border-radius:var(--raio-peq); overflow:hidden;}
+.polaroid__legenda{
+  font-family:var(--f-sans);
+  font-style:normal;
+  font-weight:500;
+  font-size:.85rem;
+  text-align:left;
+  margin-top:10px;
+  color:var(--tinta-suave);
+}
+.sobre__polaroids .polaroid,
+.card-portfolio .midia{border-radius:var(--raio-peq);}
+
+/* a caixa do mural vira um cartão liso, sem textura de papelão */
+.caixa{
+  background:var(--branco);
+  box-shadow:0 20px 44px -22px var(--sombra-forte);
+  border-radius:var(--raio);
+}
+.caixa::before{display:none;}
+
+/* abas do menu viram links simples, sem efeito de pasta de arquivo */
+.aba{
+  background:none;
+  border:none;
+  transform:none;
+  padding:8px 2px;
+  border-bottom:2px solid transparent;
+  border-radius:0;
+}
+.aba:hover,.aba:focus-visible{
+  background:none;
+  color:var(--carimbo);
+  border-bottom-color:var(--carimbo);
+}
+
+/* carimbo "aprovado" vira uma etiqueta simples, sem parecer selo batido */
+.carimbo{
+  position:static;
+  display:inline-block;
+  transform:none;
+  border:none;
+  background:var(--carimbo);
+  color:var(--branco);
+  border-radius:999px;
+  opacity:1;
+  mix-blend-mode:normal;
+  font-family:var(--f-sans);
+  font-weight:600;
+  font-size:.72rem;
+  text-transform:uppercase;
+  letter-spacing:.08em;
+  padding:5px 14px;
+  margin-bottom:16px;
+}
+.carimbo::before,.carimbo::after{display:none;}
+
+/* bilhetes de feedback viram cartões de citação limpos */
+.bilhete-feedback,
+.bilhete-feedback:nth-child(3n+2),
+.bilhete-feedback:nth-child(3n){
+  background:var(--branco);
+  box-shadow:0 16px 32px -20px var(--sombra);
+  border-radius:var(--raio-peq);
+}
+.bilhete-feedback__texto{font-family:var(--f-display); font-style:italic; font-weight:500;}
+
+/* nota de caderno (seção sobre) sem linhas nem furos de fichário */
+.nota-caderno{
+  background:var(--branco);
+  background-image:none;
+  transform:none !important;
+  border-radius:var(--raio-peq);
+  padding:28px 26px;
+  box-shadow:0 16px 30px -18px var(--sombra);
+}
+.nota-caderno::before{display:none;}
+.nota-caderno__furos{display:none;}
+
+/* folha de caderno do FAQ vira um cartão de perguntas comum */
+.caderno{
+  background:var(--branco);
+  background-image:none;
+  padding:32px;
+  border-radius:var(--raio);
+}
+.caderno::before{display:none;}
+.caderno__furos{display:none;}
+
+/* carta e envelope do contato ganham cantos mais suaves */
+.carta,.envelope{border-radius:var(--raio);}
+
+.sobre__papel{
+  position:relative;
+  clip-path:none;
+  border-radius:var(--raio);
+  background:var(--branco);
+}
+
+/* foto única da seção sobre (com os filhos), grande, preenchendo a coluna */
+.sobre__lado--foto-unica{align-items:stretch;}
+.sobre__foto-grande{width:100%;}
+.sobre__foto-grande .midia{
+  border-radius:var(--raio);
+  aspect-ratio:4/5;
+  width:100%;
+}
+.sobre__foto-grande .polaroid__legenda{
+  text-align:center;
+  margin-top:14px;
+}
 </style>
 </head>
 <body>
@@ -1082,29 +1235,14 @@ button.midia{
           <div id="sobre-texto"></div>
         </div>
 
-        <div class="sobre__lado revelar revelar-d1">
-          <!-- Nota de caderno com o texto digitado sozinho. Fica à direita
-               da página, com o mesmo efeito de digitação de antes. -->
-          <div class="nota-caderno" id="observador-maquina" style="--rot:2deg;">
-            <div class="nota-caderno__furos"><span></span><span></span><span></span></div>
-            <p class="nota-caderno__texto"><span id="maquina-texto"></span><span class="maquina__cursor" id="maquina-cursor"></span></p>
-          </div>
-
-          <div class="sobre__polaroids">
-            <!-- Fotos das polaroids. Pra trocar depois, é só substituir os arquivos
-                 imagens/sobre/polaroid-1.jpg e polaroid-2.jpg por outras com o mesmo nome. -->
-            <div class="polaroid" style="--rot:-6deg; transform:rotate(-6deg);">
-              <div class="midia midia-a">
-                <img src="imagens/sobre/polaroid-1.jpg" alt="De onde vêm as ideias de Nadia Petra">
-              </div>
-              <p class="polaroid__legenda" id="sobre-legenda-1"></p>
+        <div class="sobre__lado sobre__lado--foto-unica revelar revelar-d1">
+          <!-- Só a foto com os filhos, maior, preenchendo a coluna.
+               Pra trocar, é só substituir imagens/sobre/polaroid-2.jpg. -->
+          <div class="sobre__foto-grande">
+            <div class="midia midia-b">
+              <img src="imagens/sobre/polaroid-2.jpg" alt="Nadia Petra com os filhos">
             </div>
-            <div class="polaroid" style="--rot:5deg; transform:rotate(5deg);">
-              <div class="midia midia-b">
-                <img src="imagens/sobre/polaroid-2.jpg" alt="Onde a vida vira conteúdo para Nadia Petra">
-              </div>
-              <p class="polaroid__legenda" id="sobre-legenda-2"></p>
-            </div>
+            <p class="polaroid__legenda" id="sobre-legenda-2"></p>
           </div>
         </div>
       </div>
@@ -1398,10 +1536,15 @@ const CONFIG = {
           { marca: "Centirse", id: "aySKrO_c7ns" }
         ]},
         { nome: "Makeup", videos: [
-          { marca: "Celina Locks", id: "rEmCYCqlNUw" }
+          { marca: "Celina Locks", id: "rEmCYCqlNUw" },
+          { marca: "Jessica Ramos", id: "knFrnGKqejY" }
         ]},
         { nome: "Men's Care", videos: [
-          { marca: "O aristocrata", id: "-aFrE4XBXwo" }
+          { marca: "O aristocrata", id: "-aFrE4XBXwo" },
+          { marca: "Ferus", id: "feM-EHx1Q9E" }
+        ]},
+        { nome: "Aesthetics", videos: [
+          { marca: "Espaço Laser", id: "Syvwx2ZQtSI" }
         ]}
       ]
     },
@@ -1410,7 +1553,9 @@ const CONFIG = {
       subcategorias: [
         { nome: "Woman", videos: [
           { marca: "Bella Donna", id: "HRIRK9gBgxM" },
-          { marca: "Barriere", id: "97ghDCz8SxA" }
+          { marca: "Barriere", id: "97ghDCz8SxA" },
+          { marca: "Munny", id: "nyvbRf8kOJg" },
+          { marca: "Giulia Domna", id: "tmfRYQx4_Bk" }
         ]},
         { nome: "Kids", videos: [
           { marca: "Bugbee", id: "m7tN0oCRLas" },
@@ -1430,7 +1575,8 @@ const CONFIG = {
           { marca: "Citroen", id: "wijpKfsEZ34" }
         ]},
         { nome: "Apps", videos: [
-          { marca: "Meliuz", id: "4YfOcMVIxjA" }
+          { marca: "Meliuz", id: "4YfOcMVIxjA" },
+          { marca: "Dotz", id: "YAHZu14B4Ok" }
         ]},
         { nome: "Wellness", videos: [
           { marca: "Boiron", id: "4S9Y38gg7G4" },
@@ -1455,7 +1601,9 @@ const CONFIG = {
         ]},
         { nome: "Baby & Kids Care", videos: [
           { marca: "Disney", id: "bEvAX8HfUgY" },
-          { marca: "Fisher Price", id: "QLQXXJSiI7c" }
+          { marca: "Fisher Price", id: "QLQXXJSiI7c" },
+          { marca: "Ferus Kids", id: "X35U_AZeSyc" },
+          { marca: "MAM", id: "qjBFWDF1YzQ" }
         ]},
         { nome: "Toy & Play", videos: [
           { marca: "Boi da cara preta", id: "fF_dpcdQmr0" }
@@ -1467,7 +1615,8 @@ const CONFIG = {
       categoria: "Garden",
       subcategorias: [
         { nome: "Gardening Products", videos: [
-          { marca: "Greenup", id: "a4LDyM-eXbc" }
+          { marca: "Greenup", id: "a4LDyM-eXbc" },
+          { marca: "Greenup", id: "Pvlef-9kcb0" }
         ]}
       ]
     },
@@ -1489,6 +1638,8 @@ const CONFIG = {
           { marca: "Natikos", id: "NXqMWY6pPOg" },
           { marca: "Natikos", id: "byxXg0D2WrY" },
           { marca: "Iracema", id: "tLEJHKclxyk" },
+          { marca: "Iracema", id: "tiiQSvw0uVE" },
+          { marca: "Gran Arthuriun", id: "2m2ZBA5Q7yI" },
           { marca: "Veneza", id: "VBLe24KdS1Y" }
         ]},
         { nome: "Recipes", videos: [
@@ -1501,7 +1652,8 @@ const CONFIG = {
       categoria: "Home",
       subcategorias: [
         { nome: "Decor", videos: [
-          { marca: "Ripke", id: "YZ7JbBwmc10" }
+          { marca: "Ripke", id: "YZ7JbBwmc10" },
+          { marca: "Eita Casa Perfeita", id: "0ynIiW8E2vw" }
         ]},
         { nome: "Bedroom", videos: [
           { marca: "Luuna", id: "xBEpwGwPeNI" },
@@ -1609,7 +1761,6 @@ function renderizarSobre(){
   document.getElementById("sobre-texto").innerHTML = CONFIG.sobre.paragrafos.map(function(p){
     return "<p>" + p + "</p>";
   }).join("");
-  document.getElementById("sobre-legenda-1").textContent = CONFIG.sobre.legendaPolaroid1;
   document.getElementById("sobre-legenda-2").textContent = CONFIG.sobre.legendaPolaroid2;
 }
 
@@ -1916,6 +2067,9 @@ function iniciarRevelacaoAoRolar(){
 
 function iniciarMaquinaDeEscrever(){
   const alvo = document.getElementById("observador-maquina");
+  // Nesse teste visual, a nota de caderno saiu da seção "sobre", então esse
+  // elemento não existe mais. Sai da função sem fazer nada, pra não quebrar.
+  if (!alvo) return;
   const spanTexto = document.getElementById("maquina-texto");
   const reduzirMovimento = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   let jaDigitou = false;
