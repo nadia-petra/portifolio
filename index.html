@@ -441,6 +441,15 @@ main{ position:relative; z-index:2; }
 .depoimento blockquote{ margin:14px 0 16px; font-family:var(--titulo); font-style:italic; font-size:1.3rem; line-height:1.4; }
 .depoimento figcaption{ font-size:.92rem; color:var(--tinta-suave); }
 .depoimento figcaption b{ font-family:var(--legenda); font-size:1.35rem; color:var(--bordo); font-weight:700; display:block; }
+.audios-feedback{ list-style:none; margin:20px 0 0; padding:0; display:grid; gap:14px; }
+.audio-feedback{
+  margin:0; display:flex; flex-wrap:wrap; align-items:center; gap:12px 16px;
+  padding:18px 22px; background:var(--card); border:1px solid rgba(201,155,145,.55); border-radius:4px;
+}
+.audio-icone{ flex:none; width:44px; height:44px; border-radius:50%; display:grid; place-items:center; background:var(--papel); border:1px solid var(--dourado); }
+.audio-feedback figcaption{ flex:1 1 180px; font-size:.92rem; color:var(--tinta-suave); line-height:1.35; }
+.audio-feedback figcaption b{ display:block; font-family:var(--legenda); font-size:1.35rem; color:var(--bordo); font-weight:700; }
+.audio-feedback audio{ flex:1 1 260px; width:100%; min-width:0; height:40px; accent-color:var(--bordo); }
 
 /* ============ 7. CONTATO ============ */
 .contato-grade{ display:grid; grid-template-columns:1.2fr .8fr; gap:clamp(28px, 5vw, 56px); }
@@ -709,6 +718,7 @@ main{ position:relative; z-index:2; }
     <ul class="resultados" id="lista-resultados"></ul>
     <p class="subtitulo rv">o que as marcas dizem</p>
     <ul class="depoimentos" id="lista-depoimentos"></ul>
+    <ul class="audios-feedback" id="lista-audios"></ul>
   </section>
 
   <!-- ================= 7. BORA CRIAR JUNTOS ================= -->
@@ -1057,6 +1067,13 @@ const depoimentos = [
   // { texto: "Ótima experiência trabalhar com a Nadia, recomendo muito. Profissional super dedicada e com uma entrega excelente.", nome: "", empresa: "Cygnuss Lingerie" }
 ];
 
+// Feedbacks em áudio. Coloque o arquivo na pasta "audios" e escreva o nome aqui.
+// "empresa": de quem é o feedback (deixe "" se não quiser mostrar).
+// Pra adicionar outro, copie a linha e troque o arquivo.
+const audiosFeedback = [
+  { arquivo: "audios/feedback.mp4", empresa: "", legenda: "Feedback de uma marca parceira" }
+];
+
 // Quantos vídeos aparecem no filtro "Todos" antes do botão "ver todos".
 const limiteTodos = 12;
 
@@ -1240,6 +1257,15 @@ $("#lista-depoimentos").innerHTML = depoimentos.map((d) => `
       <figcaption>${d.nome ? `<b>${esc(d.nome)}</b>${esc(d.empresa)}` : `<b>${esc(d.empresa)}</b>`}</figcaption>
     </figure>
   </li>`).join("");
+$("#lista-audios").innerHTML = audiosFeedback.map((a) => `
+  <li class="rv">
+    <figure class="audio-feedback">
+      <span class="audio-icone" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#8a5248" stroke-width="1.8" stroke-linecap="round"><path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3z"/><path d="M19 11a7 7 0 0 1-14 0M12 18v3"/></svg></span>
+      <figcaption><b>${esc(a.empresa || "Ouça o que dizem")}</b><span>${esc(a.legenda || "")}</span></figcaption>
+      <audio controls preload="metadata" src="${esc(a.arquivo)}">Seu navegador não toca áudio.</audio>
+    </figure>
+  </li>`).join("");
+$("#lista-audios").hidden = !audiosFeedback.length;
 
 // Ano automático
 $("#ano").textContent = new Date().getFullYear();
