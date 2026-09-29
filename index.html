@@ -1437,6 +1437,7 @@ $("#form-captura").addEventListener("submit", async (e) => {
   await salvarLead(form.nome.value.trim(), form.email.value.trim(), "Pediu o mídia kit pelo site.");
   botao.disabled = false;
   $("#captura-corpo").hidden = true;
+  captura.querySelector(".selo").style.display = "none"; // tira o selo NP da confirmação
   const ok = $("#captura-ok");
   ok.hidden = false;
   ok.focus();
