@@ -9,6 +9,9 @@
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<!-- Banco de dados (Supabase): vídeos, formulário e visitas. "defer" não atrasa a página. -->
+<script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script defer src="js/banco.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Dancing+Script:wght@500;700&family=Jost:wght@400;500;600&display=swap" rel="stylesheet">
 
 <style>
@@ -377,6 +380,7 @@ main{ position:relative; z-index:2; }
 .filtro[aria-pressed="true"]{ background:var(--salvia); color:var(--tinta); border-color:var(--salvia-escura); }
 .galeria{ display:grid; grid-template-columns:repeat(auto-fill, minmax(220px,1fr)); gap:22px; list-style:none; margin:0; padding:0; }
 .galeria li[hidden]{ display:none; }
+.vazio-galeria{ grid-column:1 / -1; text-align:center; padding:28px 12px; font-family:var(--legenda); font-size:1.3rem; color:var(--tinta-suave); }
 .galeria li.surgir{ animation:surgir .45s ease both; }
 @keyframes surgir{ from{ opacity:0; transform:translateY(12px);} to{ opacity:1; transform:none;} }
 .trabalho{
@@ -1031,7 +1035,7 @@ const servicos = [
 const metricas = [
   { valor: 455,  sufixo: "",  rotulo: "vídeos entregues" },
   { valor: 216,  sufixo: "",  rotulo: "marcas atendidas" },
-  { valor: mural.length, sufixo: "", rotulo: "nichos atendidos" }, // conta sozinho os nichos da galeria
+  { valor: mural.length, sufixo: "", rotulo: "nichos atendidos", chave: "nichos" }, // conta sozinho os nichos da galeria
   { valor: 80, prefixo: "+", sufixo: "%", rotulo: "das marcas recontrataram" }
 ];
 
@@ -1076,7 +1080,7 @@ function numeroHTML(m){
     return `<strong class="placeholder-num" title="Edite este número no script">${esc(m.placeholder || "00")}</strong>`;
   }
   const pre = m.prefixo || "", suf = m.sufixo || "";
-  return `<strong data-contar="${m.valor}" data-prefixo="${esc(pre)}" data-sufixo="${esc(suf)}">${esc(pre)}${reduzMovimento ? m.valor.toLocaleString("pt-BR") : "0"}${esc(suf)}</strong>`;
+  return `<strong${m.chave ? ` data-chave="${m.chave}"` : ""} data-contar="${m.valor}" data-prefixo="${esc(pre)}" data-sufixo="${esc(suf)}">${esc(pre)}${reduzMovimento ? m.valor.toLocaleString("pt-BR") : "0"}${esc(suf)}</strong>`;
 }
 
 // Capa: números
@@ -1091,13 +1095,51 @@ const linkYT = (id) => `https://www.youtube.com/shorts/${encodeURIComponent(id)}
 // vertical = capa em pé do Shorts (quando existe); senão a capa padrão
 const capaYT = (id, vertical) => `https://i.ytimg.com/vi/${encodeURIComponent(id)}/${vertical ? "oardefault" : "hqdefault"}.jpg`;
 
-// Destaques
+/* ===== VÍDEOS (destaques e galeria) =====
+   Os vídeos vêm do banco (tabela "videos"), que você edita no admin: mudou lá,
+   o site muda sozinho. Se o banco não responder, o site usa a lista fixa acima
+   (destaques e mural), pra nunca ficar sem vídeo. */
 const iconePlay = `<svg width="26" height="26" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l11-6.5z" fill="#8a5248"/></svg>`;
-$("#lista-destaques").innerHTML = destaques.map((d, i) => `
-  <li class="rv">
-    <a class="destaque" href="${linkYT(d.id)}" data-yt="${esc(d.id)}" target="_blank" rel="noopener" aria-label="Assistir ao vídeo ${esc(d.titulo)}, ${esc(d.numero)} ${esc(d.rotulo)}">
+const iconePlayMini = `<span class="play-mini" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24"><path d="M8 5.5v13l11-6.5z" fill="#8a5248"/></svg></span>`;
+const idDoYouTube = (link) => { const m = String(link || "").match(/(?:youtube\.com\/(?:shorts\/|watch\?v=|embed\/)|youtu\.be\/)([A-Za-z0-9_-]{6,})/); return m ? m[1] : null; };
+let nichosDaGaleria = [];
+
+// A lista fixa (reserva), no mesmo formato da que vem do banco
+function videosDaReserva(){
+  return {
+    galeria: mural.flatMap((cat) => cat.subcategorias.flatMap((sub) => sub.videos.map((v) =>
+      ({ nicho: cat.categoria, sub: sub.nome, marca: v.marca, id: v.id, link: linkYT(v.id), formato: "Shorts" })))),
+    destaques: destaques.map((d) => ({ id: d.id, link: linkYT(d.id), capa: d.capa, numero: d.numero, rotulo: d.rotulo, titulo: d.titulo, contexto: d.contexto }))
+  };
+}
+// O que vem do banco. "destaque" (ex: "+470 mil visualizações") vira número + rótulo.
+function videosDoBanco(linhas){
+  return {
+    galeria: linhas.map((v) => ({ nicho: (v.nicho || "").trim() || "Outros", sub: v.titulo || "", marca: v.marca || "", id: idDoYouTube(v.link), link: v.link, formato: v.formato || "" })),
+    destaques: linhas.filter((v) => (v.destaque || "").trim()).slice(0, 3).map((v) => {
+      const t = v.destaque.trim(), corte = t.lastIndexOf(" ");
+      return { id: idDoYouTube(v.link), link: v.link, capa: null,
+        numero: corte > 0 ? t.slice(0, corte) : t, rotulo: corte > 0 ? t.slice(corte + 1) : "",
+        titulo: v.marca || v.titulo || "", contexto: [v.nicho, v.titulo].filter(Boolean).join(" · ") };
+    })
+  };
+}
+// Link do card: vídeo do YouTube toca dentro do site; outro link abre numa aba nova
+function atributosDoLink(v){
+  return v.id ? `href="${linkYT(v.id)}" data-yt="${esc(v.id)}" target="_blank" rel="noopener"` : `href="${esc(v.link || "#")}" target="_blank" rel="noopener"`;
+}
+
+function mostrarDestaques(lista){
+  const secao = $("#destaques"), linkMenu = document.querySelector('.menu a[href="#destaques"]');
+  secao.hidden = !lista.length;
+  if (linkMenu) linkMenu.parentElement.hidden = !lista.length;
+  $("#lista-destaques").innerHTML = lista.map((d, i) => `
+  <li class="surgir">
+    <a class="destaque" ${atributosDoLink(d)} aria-label="Assistir ao vídeo ${esc(d.titulo)}, ${esc(d.numero)} ${esc(d.rotulo)}">
       <div class="destaque-capa" style="background:${degrades.destaque[i % 3]}">
-        <img src="${d.capa ? esc(d.capa) : capaYT(d.id, true)}" alt="Capa do vídeo ${esc(d.titulo)}" loading="lazy"${d.capa ? "" : ` data-reserva="${capaYT(d.id)}"`}>
+        ${d.capa ? `<img src="${esc(d.capa)}" alt="Capa do vídeo ${esc(d.titulo)}" loading="lazy">`
+          : d.id ? `<img src="${capaYT(d.id, true)}" alt="Capa do vídeo ${esc(d.titulo)}" loading="lazy" data-reserva="${capaYT(d.id)}">`
+          : `<span class="formato">capa do vídeo 9:16</span>`}
         <span class="play" aria-hidden="true">${iconePlay}</span>
       </div>
       <p class="destaque-num">${esc(d.numero)}</p>
@@ -1107,28 +1149,45 @@ $("#lista-destaques").innerHTML = destaques.map((d, i) => `
       <span class="destaque-ver" aria-hidden="true">Assistir ao vídeo ›</span>
     </a>
   </li>`).join("");
+}
 
-// Filtros e galeria: transforma o mural (nicho > subcategoria > vídeos) numa lista só
-const trabalhos = mural.flatMap((cat, ci) => cat.subcategorias.flatMap((sub) =>
-  sub.videos.map((v) => ({ nicho: String(ci), nomeNicho: cat.categoria, sub: sub.nome, marca: v.marca, id: v.id }))));
-
-$("#filtros").innerHTML =
-  `<button class="filtro" type="button" data-filtro="todos" aria-pressed="true">Todos</button>` +
-  mural.map((c, ci) => `<button class="filtro" type="button" data-filtro="${ci}" aria-pressed="false">${esc(c.categoria)}</button>`).join("");
-
-const iconePlayMini = `<span class="play-mini" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24"><path d="M8 5.5v13l11-6.5z" fill="#8a5248"/></svg></span>`;
-$("#galeria").innerHTML = trabalhos.map((t, i) => `
-  <li data-nicho="${t.nicho}"${i >= limiteTodos ? " hidden" : ""}>
-    <a class="trabalho" href="${linkYT(t.id)}" data-yt="${esc(t.id)}" target="_blank" rel="noopener" aria-label="Assistir ao vídeo para ${esc(t.marca)}, ${esc(t.sub)}">
+function mostrarGaleria(lista){
+  nichosDaGaleria = [...new Set(lista.map((t) => t.nicho))];
+  $("#filtros").innerHTML =
+    `<button class="filtro" type="button" data-filtro="todos" aria-pressed="true">Todos</button>` +
+    nichosDaGaleria.map((n, i) => `<button class="filtro" type="button" data-filtro="${i}" aria-pressed="false">${esc(n)}</button>`).join("");
+  if (!lista.length){
+    $("#galeria").innerHTML = `<li class="vazio-galeria">Novos trabalhos chegando em breve.</li>`;
+    $("#ver-mais").hidden = true;
+    return;
+  }
+  $("#galeria").innerHTML = lista.map((t, i) => `
+  <li data-nicho="${nichosDaGaleria.indexOf(t.nicho)}"${i >= limiteTodos ? " hidden" : ""}>
+    <a class="trabalho" ${atributosDoLink(t)} aria-label="Assistir ao vídeo para ${esc(t.marca)}, ${esc(t.sub)}">
       <div class="trabalho-capa">
-        <img src="https://img.youtube.com/vi/${encodeURIComponent(t.id)}/hqdefault.jpg" alt="" loading="lazy" width="480" height="360">
-        <span class="etiqueta">${esc(t.nomeNicho)}</span>
+        ${t.id ? `<img src="https://img.youtube.com/vi/${encodeURIComponent(t.id)}/hqdefault.jpg" alt="" loading="lazy" width="480" height="360">` : `<span class="formato">${esc(t.formato || "vídeo")}</span>`}
+        <span class="etiqueta">${esc(t.nicho)}</span>
         ${iconePlayMini}
       </div>
       <h3>${esc(t.marca)}</h3>
       <p>${esc(t.sub)}</p>
     </a>
   </li>`).join("");
+  aplicarFiltro("todos", false);
+}
+
+let videosNaTela = false;
+function mostrarVideos(dados){
+  videosNaTela = true;
+  mostrarDestaques(dados.destaques);
+  mostrarGaleria(dados.galeria);
+  // "nichos atendidos" nos números acompanha os nichos da galeria
+  const nichosEl = document.querySelector('[data-chave="nichos"]');
+  if (nichosEl){ nichosEl.dataset.contar = nichosDaGaleria.length; if (nichosEl.closest(".visivel") || reduzMovimento) nichosEl.textContent = String(nichosDaGaleria.length); }
+}
+$("#galeria").innerHTML = `<li class="vazio-galeria">Carregando os vídeos...</li>`;
+// Se o banco demorar demais, mostra a lista fixa (e troca quando o banco responder)
+const reservaVideos = setTimeout(() => { if (!videosNaTela) mostrarVideos(videosDaReserva()); }, 6000);
 
 let filtroAtual = "todos";
 function aplicarFiltro(filtro, mostrarTudo){
@@ -1146,7 +1205,7 @@ function aplicarFiltro(filtro, mostrarTudo){
   const verMais = $("#ver-mais");
   verMais.hidden = visiveis >= total;
   verMais.textContent = `Ver todos os ${total} vídeos`;
-  $("#aviso-filtro").textContent = `${visiveis} vídeos em ${filtro === "todos" ? "todos os nichos" : mural[filtro].categoria}`;
+  $("#aviso-filtro").textContent = `${visiveis} vídeos em ${filtro === "todos" ? "todos os nichos" : nichosDaGaleria[filtro]}`;
 }
 $("#filtros").addEventListener("click", (e) => {
   const botao = e.target.closest(".filtro");
@@ -1155,7 +1214,6 @@ $("#filtros").addEventListener("click", (e) => {
   aplicarFiltro(botao.dataset.filtro, false);
 });
 $("#ver-mais").addEventListener("click", () => aplicarFiltro(filtroAtual, true));
-aplicarFiltro("todos", false);
 
 // Serviços
 $("#lista-servicos").innerHTML = servicos.map((s, i) => `
@@ -1206,7 +1264,7 @@ function contar(el){
   (function passo(agora){
     const p = Math.min((agora - inicio) / duracao, 1);
     const suave = 1 - Math.pow(1 - p, 3);
-    el.textContent = prefixo + Math.round(alvo * suave).toLocaleString("pt-BR") + sufixo;
+    el.textContent = prefixo + Math.round(Number(el.dataset.contar) * suave).toLocaleString("pt-BR") + sufixo;
     if (p < 1) requestAnimationFrame(passo);
   })(inicio);
 }
@@ -1242,19 +1300,81 @@ function validar(form, aviso){
   return true;
 }
 
-// Formulário de contato: confirma na própria tela, sem recarregar
-$("#form-contato").addEventListener("submit", (e) => {
+// Grava quem mandou o formulário na sua base de marcas (tabela "marcas"), como Lead
+async function salvarLead(nome, email, obs){
+  const b = window.banco;
+  if (!b) return false;
+  const hoje = new Date(), dia = hoje.getFullYear() + "-" + String(hoje.getMonth() + 1).padStart(2, "0") + "-" + String(hoje.getDate()).padStart(2, "0");
+  try {
+    const { error } = await b.from("marcas").insert({ nome: nome.slice(0, 160), email: email.slice(0, 200), obs: obs.slice(0, 5000), situacao: "lead", origem: "site", ultimo_contato: dia });
+    return !error;
+  } catch (erro) { return false; }
+}
+
+// Formulário de contato: salva como Lead e confirma na própria tela, sem recarregar
+$("#form-contato").addEventListener("submit", async (e) => {
   e.preventDefault();
   const form = e.target;
   if (!validar(form, $("#erro-contato"))) return;
-  const nome = form.nome.value.trim();
-  const corpo = `Oi, Nadia! Aqui é ${nome} (${form.email.value.trim()}).\n\n${form.mensagem.value.trim()}`;
+  const nome = form.nome.value.trim(), email = form.email.value.trim(), mensagem = form.mensagem.value.trim();
+  const corpo = `Oi, Nadia! Aqui é ${nome} (${email}).\n\n${mensagem}`;
   $("#ok-mailto").href = "mailto:nadiapetraugc@gmail.com?subject=" + encodeURIComponent("Proposta de parceria UGC") + "&body=" + encodeURIComponent(corpo);
+  const botao = form.querySelector("[type=submit]");
+  botao.disabled = true; botao.textContent = "Enviando...";
+  const salvou = await salvarLead(nome, email, mensagem);
+  botao.disabled = false; botao.textContent = "Enviar mensagem";
   $("#ok-nome").textContent = nome.split(" ")[0];
-  form.hidden = true;
   const ok = $("#ok-contato");
+  if (!salvou){
+    ok.querySelector("h3").textContent = "Quase lá!";
+    ok.querySelector("p").textContent = "Não consegui enviar por aqui agora. Clique abaixo para mandar a mesma mensagem pelo e-mail.";
+  }
+  form.hidden = true;
   ok.hidden = false;
   ok.focus();
+});
+
+// Registro simples de visita (tabela "visitas"): só a data, a página e de onde veio.
+// Não pergunta nada pro visitante e não usa nenhum serviço de fora.
+function nomeDaOrigem(texto){
+  const t = String(texto).toLowerCase().replace(/^www\./, "");
+  const exatos = { "t.co": "X (Twitter)", "x.com": "X (Twitter)", "wa.me": "WhatsApp", "fb.me": "Facebook", "youtu.be": "YouTube", "lnkd.in": "LinkedIn" };
+  if (exatos[t]) return exatos[t];
+  const palavras = [["instagram", "Instagram"], ["facebook", "Facebook"], ["google", "Google"], ["bing", "Bing"], ["youtube", "YouTube"], ["tiktok", "TikTok"], ["whatsapp", "WhatsApp"], ["linkedin", "LinkedIn"], ["twitter", "X (Twitter)"], ["pinterest", "Pinterest"], ["linktr", "Linktree"], ["threads", "Threads"]];
+  const achou = palavras.find((p) => t.includes(p[0]));
+  return achou ? achou[1] : t.slice(0, 60);
+}
+function registrarVisita(b){
+  if (!b || location.protocol === "file:" || /^(localhost|127\.0\.0\.1)$/.test(location.hostname)) return; // testes no computador não contam
+  try { if (localStorage.getItem("np-sou-eu") === "1") return; } catch (erro) {}      // você mesma não conta
+  try { if (sessionStorage.getItem("np-visita")) return; sessionStorage.setItem("np-visita", "1"); } catch (erro) {} // uma por visita
+  const params = new URLSearchParams(location.search);
+  let origem = (params.get("utm_source") || params.get("origem") || "").trim();
+  if (origem) origem = nomeDaOrigem(origem);
+  else {
+    let host = "";
+    try { host = document.referrer ? new URL(document.referrer).hostname.replace(/^www\./, "") : ""; } catch (erro) {}
+    origem = !host || host === location.hostname.replace(/^www\./, "") ? "direto" : nomeDaOrigem(host);
+  }
+  b.from("visitas").insert({ pagina: (location.pathname || "/").slice(0, 300), origem: origem.slice(0, 120) }).then(() => {}, () => {});
+}
+
+// Quando o banco terminar de carregar: busca os vídeos visíveis e registra a visita
+window.addEventListener("DOMContentLoaded", async () => {
+  const b = window.banco;
+  registrarVisita(b);
+  if (!b){ clearTimeout(reservaVideos); if (!videosNaTela) mostrarVideos(videosDaReserva()); return; }
+  try {
+    const { data, error } = await b.from("videos").select("titulo,link,nicho,formato,marca,destaque,ordem")
+      .eq("visivel", true).order("ordem", { ascending: true }).order("id", { ascending: true });
+    if (error) throw error;
+    clearTimeout(reservaVideos);
+    mostrarVideos(videosDoBanco(data || []));
+  } catch (erro) {
+    // Tabela ainda não criada ou sem conexão: fica a lista fixa
+    clearTimeout(reservaVideos);
+    if (!videosNaTela) mostrarVideos(videosDaReserva());
+  }
 });
 
 // Capa vertical do Shorts nem sempre existe: se falhar, usa a capa padrão do YouTube
@@ -1307,10 +1427,15 @@ captura.addEventListener("click", (e) => {
   if (!dentro) fecharCaptura();
 });
 // Esc já fecha o dialog nativamente
-$("#form-captura").addEventListener("submit", (e) => {
+$("#form-captura").addEventListener("submit", async (e) => {
   e.preventDefault();
-  if (!validar(e.target, $("#erro-captura"))) return;
-  // EDITE: aqui dá pra enviar o nome e o e-mail para a sua lista (Formspree, Mailchimp etc.)
+  const form = e.target;
+  if (!validar(form, $("#erro-captura"))) return;
+  // Quem pede o mídia kit também entra na sua base de marcas, como Lead
+  const botao = form.querySelector("[type=submit]");
+  botao.disabled = true;
+  await salvarLead(form.nome.value.trim(), form.email.value.trim(), "Pediu o mídia kit pelo site.");
+  botao.disabled = false;
   $("#captura-corpo").hidden = true;
   const ok = $("#captura-ok");
   ok.hidden = false;

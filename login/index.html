@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Entrar | Nadia Petra</title>
+<meta name="theme-color" content="#F6F1E8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --linho:#F6F1E8; --papel:#EAE0D0; --card:#DCCBB7;
+  --tinta:#4B3A2F; --tinta-suave:#5f4a3d;
+  --salvia:#A7AD91; --salvia-escura:#7f8669;
+  --rose:#C99B91; --rose-texto:#8a5248;
+  --raio:6px;
+}
+*,*::before,*::after{ box-sizing:border-box; }
+html,body{ margin:0; min-height:100%; }
+body{
+  min-height:100vh; min-height:100dvh;
+  display:grid; place-items:center; padding:24px 16px;
+  font-family:"Jost", system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+  font-size:.95rem; line-height:1.5; color:var(--tinta); background:var(--linho);
+}
+body.conferindo .cartao{ visibility:hidden; }
+.cartao{
+  width:100%; max-width:380px; position:relative;
+  background:var(--papel); border-radius:var(--raio); padding:32px 28px 26px;
+  box-shadow:0 12px 30px rgba(75,58,47,.12);
+}
+.cartao::before{ content:""; position:absolute; inset:8px; border:1px solid var(--rose); border-radius:3px; pointer-events:none; }
+.topo{ text-align:center; margin-bottom:22px; position:relative; }
+.topo b{ display:block; font-size:1.05rem; font-weight:600; letter-spacing:.06em; text-transform:uppercase; }
+.topo span{ font-size:.85rem; color:var(--tinta-suave); }
+form{ display:grid; gap:14px; position:relative; }
+label{ display:block; font-size:.82rem; font-weight:500; margin-bottom:5px; }
+input{
+  width:100%; min-height:44px; padding:10px 12px; font:inherit; color:var(--tinta);
+  background:var(--linho); border:1px solid rgba(75,58,47,.35); border-radius:4px;
+}
+input:focus{ outline:none; border-color:var(--salvia-escura); box-shadow:0 0 0 3px rgba(167,173,145,.45); }
+.btn{
+  min-height:44px; padding:10px 16px; border-radius:4px; cursor:pointer;
+  font:inherit; font-weight:500; color:var(--tinta);
+  background:var(--salvia); border:1px solid var(--salvia-escura);
+}
+.btn:hover{ background:#b6bba1; }
+.btn[disabled]{ opacity:.6; cursor:wait; }
+.link{
+  background:none; border:0; padding:6px 0; font:inherit; font-size:.85rem;
+  color:var(--rose-texto); text-decoration:underline; text-underline-offset:3px; cursor:pointer; justify-self:center;
+}
+:focus-visible{ outline:2px solid var(--rose-texto); outline-offset:2px; }
+.faixa{ padding:10px 12px; border-radius:4px; font-size:.85rem; }
+.faixa.erro{ background:#f2d9d4; color:#6f2f28; border:1px solid #d9a79d; }
+.faixa.ok{ background:#e3e6d8; color:#3f4530; border:1px solid var(--salvia); }
+.voltar{ display:block; text-align:center; margin-top:18px; font-size:.82rem; color:var(--tinta-suave); position:relative; }
+[hidden]{ display:none !important; }
+</style>
+</head>
+<body class="conferindo">
+<main class="cartao">
+  <div class="topo">
+    <b>Nadia Petra</b>
+    <span id="subtitulo">Entrar no painel</span>
+  </div>
+
+  <!-- Entrar -->
+  <form id="form-entrar" novalidate>
+    <div class="faixa erro" id="erro" role="alert" hidden></div>
+    <div class="faixa ok" id="aviso" role="status" hidden></div>
+    <div>
+      <label for="email">E-mail</label>
+      <input id="email" type="email" autocomplete="username" required>
+    </div>
+    <div id="bloco-senha">
+      <label for="senha">Senha</label>
+      <input id="senha" type="password" autocomplete="current-password" required>
+    </div>
+    <button class="btn" type="submit" id="botao">Entrar</button>
+    <button class="link" type="button" id="esqueci">Esqueci minha senha</button>
+  </form>
+
+  <!-- Nova senha (aparece quando você chega pelo link do e-mail de recuperação) -->
+  <form id="form-nova" novalidate hidden>
+    <div class="faixa erro" id="erro-nova" role="alert" hidden></div>
+    <div>
+      <label for="nova">Nova senha (mínimo 8 caracteres)</label>
+      <input id="nova" type="password" autocomplete="new-password" minlength="8" required>
+    </div>
+    <button class="btn" type="submit" id="botao-nova">Salvar nova senha</button>
+  </form>
+
+  <a class="voltar" href="../">Voltar para o portfólio</a>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../js/banco.js"></script>
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var ADMIN = "../admin/";
+  var modoRecuperacao = /type=recovery/.test(location.hash) || /nova-senha/.test(location.search);
+
+  function mostrar(el, texto) { el.textContent = texto; el.hidden = !texto; }
+  function liberarTela() { document.body.classList.remove("conferindo"); }
+
+  // Traduz os erros do Supabase para português
+  function traduzir(erro) {
+    var m = String((erro && erro.message) || "").toLowerCase();
+    if (m.indexOf("invalid login") > -1 || m.indexOf("invalid credentials") > -1) return "E-mail ou senha incorretos";
+    if (m.indexOf("email not confirmed") > -1) return "Confirme o seu e-mail antes de entrar. O link está na sua caixa de entrada.";
+    if (m.indexOf("rate limit") > -1 || m.indexOf("too many") > -1) return "Muitas tentativas seguidas. Espere alguns minutos e tente de novo.";
+    if (m.indexOf("password should") > -1 || m.indexOf("at least") > -1) return "A senha precisa ter pelo menos 8 caracteres.";
+    if (m.indexOf("same password") > -1) return "A nova senha precisa ser diferente da antiga.";
+    if (m.indexOf("fetch") > -1 || m.indexOf("network") > -1) return "Sem conexão com o servidor. Confira a internet e tente de novo.";
+    return "Não deu certo agora. Tente de novo em instantes.";
+  }
+
+  if (!window.banco) {
+    liberarTela();
+    mostrar($("erro"), "Não consegui carregar a conexão com o banco. Confira a internet e recarregue a página.");
+    $("botao").disabled = true;
+    return;
+  }
+
+  function entrarNoModoNovaSenha() {
+    $("form-entrar").hidden = true;
+    $("form-nova").hidden = false;
+    $("subtitulo").textContent = "Crie uma nova senha";
+    liberarTela();
+    $("nova").focus();
+  }
+
+  window.banco.auth.onAuthStateChange(function (evento) {
+    if (evento === "PASSWORD_RECOVERY") { modoRecuperacao = true; entrarNoModoNovaSenha(); }
+  });
+
+  // Se já tem sessão aberta, vai direto pro admin
+  window.banco.auth.getSession().then(function (r) {
+    var sessao = r && r.data && r.data.session;
+    if (modoRecuperacao && sessao) { entrarNoModoNovaSenha(); return; }
+    if (sessao) { location.replace(ADMIN); return; }
+    liberarTela();
+    $("email").focus();
+  }).catch(function () { liberarTela(); });
+
+  // Entrar
+  $("form-entrar").addEventListener("submit", function (e) {
+    e.preventDefault();
+    mostrar($("erro"), ""); mostrar($("aviso"), "");
+    var email = $("email").value.trim(), senha = $("senha").value;
+    if (!email || !senha) { mostrar($("erro"), "Preencha o e-mail e a senha."); return; }
+    $("botao").disabled = true; $("botao").textContent = "Entrando...";
+    window.banco.auth.signInWithPassword({ email: email, password: senha }).then(function (r) {
+      if (r.error) throw r.error;
+      location.replace(ADMIN);
+    }).catch(function (erro) {
+      mostrar($("erro"), traduzir(erro));
+      $("botao").disabled = false; $("botao").textContent = "Entrar";
+      $("senha").select();
+    });
+  });
+
+  // Esqueci minha senha
+  $("esqueci").addEventListener("click", function () {
+    mostrar($("erro"), ""); mostrar($("aviso"), "");
+    var email = $("email").value.trim();
+    if (!email) { mostrar($("erro"), "Escreva o seu e-mail no campo acima e clique de novo em \"Esqueci minha senha\"."); $("email").focus(); return; }
+    var volta = location.href.split("#")[0].split("?")[0] + "?nova-senha=1";
+    window.banco.auth.resetPasswordForEmail(email, { redirectTo: volta }).then(function (r) {
+      if (r.error) throw r.error;
+      mostrar($("aviso"), "Se esse e-mail tiver conta, o link para criar uma nova senha chega em alguns minutos. Confira também o spam.");
+    }).catch(function (erro) { mostrar($("erro"), traduzir(erro)); });
+  });
+
+  // Salvar a nova senha
+  $("form-nova").addEventListener("submit", function (e) {
+    e.preventDefault();
+    mostrar($("erro-nova"), "");
+    var nova = $("nova").value;
+    if (nova.length < 8) { mostrar($("erro-nova"), "A senha precisa ter pelo menos 8 caracteres."); return; }
+    $("botao-nova").disabled = true;
+    window.banco.auth.updateUser({ password: nova }).then(function (r) {
+      if (r.error) throw r.error;
+      location.replace(ADMIN);
+    }).catch(function (erro) {
+      mostrar($("erro-nova"), traduzir(erro));
+      $("botao-nova").disabled = false;
+    });
+  });
+})();
+</script>
+</body>
+</html>
