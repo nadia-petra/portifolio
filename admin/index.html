@@ -176,6 +176,15 @@ th.ativa .seta{ opacity:1; color:var(--rose-texto); }
 .sit-cliente{ background:#e1e5d3; color:#3f4530; border-color:#c6cbb2; }
 .sit-parada{ background:#e8e4df; color:#6b625a; border-color:#d6cfc6; }
 
+/* Abordagens: uma cor por status */
+.ab-a-abordar{ background:#efe9df; color:#5f4a3d; border-color:#ddd2c2; }
+.ab-abordada{ background:#f4e8c1; color:#5b4510; border-color:#e6d49a; }
+.ab-respondeu{ background:#dfe8ef; color:#2f4a5c; border-color:#c3d3df; }
+.ab-negociando{ background:#e6dcef; color:#4a3a5c; border-color:#d3c4e0; }
+.ab-fechou{ background:#d6e4d3; color:#25402c; border-color:#b8cdb3; }
+.ab-sem-resposta{ background:#e8e4df; color:#6b625a; border-color:#d6cfc6; }
+.ab-recusou{ background:#f3dcd6; color:#7a3a30; border-color:#e5c0b6; }
+
 /* Campanhas: pílulas de tipo, status e prazo */
 .tipo-conteudo{ background:#e1e5d3; color:#3f4530; border-color:#c6cbb2; }
 .tipo-publicidade{ background:#f3e1dc; color:#7a4238; border-color:#e5c5bd; }
@@ -344,6 +353,10 @@ dialog.janela::backdrop{ background:rgba(75,58,47,.4); }
         <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8"/></svg>
         Marcas
       </a>
+      <a class="item" href="#abordagens" data-aba="abordagens">
+        <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4z"/></svg>
+        Abordagens
+      </a>
       <h2>minha rotina</h2>
       <a class="item" href="#calendario" data-aba="calendario">
         <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
@@ -382,6 +395,7 @@ dialog.janela::backdrop{ background:rgba(75,58,47,.4); }
       <div class="avisos" id="avisos" aria-live="polite"></div>
       <section id="aba-portfolio" data-aba-corpo="portfolio"></section>
       <section id="aba-marcas" data-aba-corpo="marcas" hidden></section>
+      <section id="aba-abordagens" data-aba-corpo="abordagens" hidden></section>
       <section id="aba-calendario" data-aba-corpo="calendario" hidden></section>
       <section id="aba-campanhas" data-aba-corpo="campanhas" hidden></section>
       <section id="aba-checklist" data-aba-corpo="checklist" hidden></section>

@@ -124,9 +124,10 @@
     calendario: ["titulo", "marca", "tipo", "data", "status"],
     campanhas: ["campanha", "cliente", "tipo", "status", "qtd", "valor", "prazo", "pagamento", "ativa", "favorita"],
     marcados: ["chave"],
-    visitas: ["data", "pagina", "origem"]
+    visitas: ["data", "pagina", "origem"],
+    abordagens: ["marca", "instagram", "contato", "telefone", "email", "status", "abordado_em"]
   };
-  var estado = { videos: [], marcas: [], calendario: [], campanhas: [], marcados: {}, visitas: [], ok: {} };
+  var estado = { videos: [], marcas: [], calendario: [], campanhas: [], marcados: {}, visitas: [], abordagens: [], ok: {} };
 
   // Tenta a consulta completa; se faltar algum campo usado na ordenação, tenta a simples
   async function carregar(tabela, completa, simples) {
@@ -159,7 +160,8 @@
     carregar("campanhas", function (q) { return q.select("*").order("criado_em", { ascending: false }); }, function (q) { return q.select("*"); }),
     carregar("marcados", function (q) { return q.select("chave"); }),
     carregar("visitas", function (q) { return q.select("data,origem,pagina").gte("data", inicio14.toISOString()).limit(20000); },
-      function (q) { return q.select("*").limit(20000); })
+      function (q) { return q.select("*").limit(20000); }),
+    carregar("abordagens", function (q) { return q.select("*").order("criado_em", { ascending: false }); }, function (q) { return q.select("*"); })
   ]);
   estado.videos = todos[0];
   estado.marcas = todos[1];
@@ -167,6 +169,7 @@
   estado.campanhas = todos[3];
   todos[4].forEach(function (l) { if (l.chave) estado.marcados[l.chave] = true; });
   estado.visitas = todos[5];
+  estado.abordagens = todos[6];
 
   // Grava no banco e devolve a linha salva (ou o erro)
   async function gravar(tabela, dados, id) {
@@ -269,6 +272,7 @@
   var ABAS = {
     portfolio: { titulo: "Portfólio", montar: montarPortfolio },
     marcas: { titulo: "Marcas", montar: montarMarcas },
+    abordagens: { titulo: "Abordagens", montar: montarAbordagens },
     calendario: { titulo: "Calendário", montar: montarCalendario },
     campanhas: { titulo: "Campanhas", montar: montarCampanhas },
     checklist: { titulo: "Checklist portfólio", montar: montarChecklist }
@@ -970,13 +974,13 @@
     tbody.addEventListener("keydown", function (e) { if (e.key === "Enter" && e.target.matches("tr")) clique(e); });
   }
 
-  function formularioCampanha(c) {
+  function formularioCampanha(c, clienteNovo) {
     abrirFormulario({
       titulo: c ? "Editar campanha" : "Adicionar campanha",
-      valores: c || { tipo: "Conteúdo", status: "Briefing", qtd: 1, valor: 0, pagamento: "pendente", ativa: true },
+      valores: c || { cliente: clienteNovo || "", tipo: "Conteúdo", status: "Briefing", qtd: 1, valor: 0, pagamento: "pendente", ativa: true },
       campos: [
         { nome: "campanha", rotulo: "Campanha", obrigatorio: true, inteiro: true },
-        { nome: "cliente", rotulo: "Cliente", lista: uniq(estado.marcas.map(function (m) { return m.nome; })) },
+        { nome: "cliente", rotulo: "Cliente", lista: uniq(estado.marcas.map(function (m) { return m.nome; }).concat(estado.abordagens.map(function (a) { return a.marca; }))), dica: "Use o mesmo nome da marca na aba Abordagens, que o projeto aparece lá sozinho." },
         { nome: "tipo", rotulo: "Tipo", tipo: "select", opcoes: ["Conteúdo", "Publicidade"] },
         { nome: "status", rotulo: "Status", tipo: "select", opcoes: FUNIL },
         { nome: "prazo", rotulo: "Prazo", tipo: "date" },
@@ -1000,6 +1004,269 @@
         toast("Campanha apagada");
         montarSeguro(abaAtual);
       } : null
+    });
+  }
+
+  /* ================= 10b. ABA ABORDAGENS =================
+     As marcas que você vai procurar. Os projetos fechados vêm da aba
+     Campanhas: tudo que tiver o mesmo nome de cliente soma aqui. */
+  var STATUS_AB = [["a abordar", "A abordar"], ["abordada", "Abordada"], ["respondeu", "Respondeu"], ["negociando", "Negociando"],
+    ["fechou", "Fechou"], ["sem resposta", "Sem resposta"], ["recusou", "Recusou"]];
+  var nomeStatusAb = {}; STATUS_AB.forEach(function (s) { nomeStatusAb[s[0]] = s[1]; });
+  var filtroAb = { busca: "", status: "" };
+
+  function chaveMarca(s) { return semAcento(s).replace(/[^a-z0-9]/g, ""); }
+  function chaveInsta(s) { var i = linkInstagram(s); return i ? i.usuario.slice(1).toLowerCase() : ""; }
+  // Soma os projetos fechados (aba Campanhas) de cada marca
+  function projetosDe(marca) {
+    var k = chaveMarca(marca);
+    var lista = estado.campanhas.filter(function (c) { return !c.exemplo && k && chaveMarca(c.cliente) === k; });
+    return {
+      qtd: lista.length,
+      videos: lista.reduce(function (s, c) { return s + num(c.qtd); }, 0),
+      valor: lista.reduce(function (s, c) { return s + num(c.valor); }, 0)
+    };
+  }
+  function abordagensFiltradas() {
+    var b = semAcento(filtroAb.busca.trim()).replace(/^@/, "");
+    return estado.abordagens.filter(function (a) {
+      if (filtroAb.status && a.status !== filtroAb.status) return false;
+      return !b || semAcento([a.marca, a.instagram, a.email, a.contato, a.nicho].join(" ")).indexOf(b) > -1;
+    });
+  }
+
+  function montarAbordagens(corpo) {
+    var todas = estado.abordagens;
+    var conta = function (lista) { return todas.filter(function (a) { return lista.indexOf(a.status) > -1; }).length; };
+    var abordadas = todas.filter(function (a) { return a.status !== "a abordar"; }).length;
+    var responderam = conta(["respondeu", "negociando", "fechou"]);
+    var fecharam = conta(["fechou"]);
+    var somaProj = todas.reduce(function (s, a) { var p = projetosDe(a.marca); s.qtd += p.qtd; s.videos += p.videos; s.valor += p.valor; return s; }, { qtd: 0, videos: 0, valor: 0 });
+    var taxa = abordadas > 0 ? Math.round((responderam / abordadas) * 100) : 0;
+    var porStatus = {}; todas.forEach(function (a) { porStatus[a.status] = (porStatus[a.status] || 0) + 1; });
+
+    corpo.innerHTML = '<div class="faixa">' +
+        "<div><small>Na lista</small><strong>" + todas.length + "</strong><span>" + plural(porStatus["a abordar"] || 0, "a abordar", "a abordar") + "</span></div>" +
+        "<div><small>Já abordadas</small><strong>" + abordadas + "</strong><span>" + (abordadas ? taxa + "% responderam" : "comece pela lista") + "</span></div>" +
+        "<div><small>Fecharam</small><strong>" + fecharam + "</strong><span>" + plural(somaProj.qtd, "projeto", "projetos") + " · " + plural(somaProj.videos, "vídeo", "vídeos") + "</span></div>" +
+        "<div><small>Valor fechado</small><strong>" + reais(somaProj.valor) + "</strong><span>soma da aba Campanhas</span></div>" +
+      "</div>" +
+      '<div class="bloco"><div class="bloco-topo">' +
+        '<input class="campo busca" type="search" id="busca-ab" placeholder="Buscar por marca, @, e-mail ou contato" aria-label="Buscar abordagens" value="' + esc(filtroAb.busca) + '">' +
+        '<select class="campo" id="filtro-ab" aria-label="Filtrar por status"><option value="">Todos os status (' + todas.length + ")</option>" +
+          STATUS_AB.map(function (s) { return '<option value="' + s[0] + '"' + (filtroAb.status === s[0] ? " selected" : "") + ">" + s[1] + " (" + (porStatus[s[0]] || 0) + ")</option>"; }).join("") + "</select>" +
+        '<span style="margin-left:auto"></span>' +
+        '<button class="btn" type="button" id="importar-ab">' + ic("baixar", "width:15px;height:15px;transform:rotate(180deg)") + " Importar lista</button>" +
+        '<button class="btn" type="button" id="baixar-ab">' + ic("baixar", "width:15px;height:15px") + " Baixar CSV</button>" +
+        '<button class="btn principal" type="button" id="nova-ab">' + ic("mais", "width:15px;height:15px") + " Adicionar marca</button>" +
+      '</div><div class="tabela-rolagem" id="tabela-ab"></div></div>';
+
+    montarTabelaAbordagens();
+    $("#busca-ab").addEventListener("input", function (e) { filtroAb.busca = e.target.value; montarTabelaAbordagens(); });
+    $("#filtro-ab").addEventListener("change", function (e) { filtroAb.status = e.target.value; montarTabelaAbordagens(); });
+    $("#nova-ab").addEventListener("click", function () { formularioAbordagem(null); });
+    $("#importar-ab").addEventListener("click", abrirImportacao);
+    $("#baixar-ab").addEventListener("click", function () {
+      var linhas = abordagensFiltradas().map(function (a) {
+        var p = projetosDe(a.marca);
+        return [a.marca, a.instagram, a.seguidores, a.nicho, a.vende, a.contato, a.telefone, a.email, a.site, a.usa_creator,
+          nomeStatusAb[a.status] || a.status, dataBR(a.abordado_em), p.qtd, p.videos, p.valor.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }), a.obs];
+      });
+      baixarCSV("abordagens", ["Marca", "Instagram", "Seguidores", "Nicho", "O que vende", "Contato", "Telefone", "E-mail", "Site", "Já usa creator",
+        "Status", "Abordada em", "Projetos fechados", "Vídeos", "Valor fechado (R$)", "Observação"], linhas);
+    });
+  }
+
+  function montarTabelaAbordagens() {
+    var alvo = $("#tabela-ab");
+    if (!alvo) return;
+    if (estado.ok.abordagens === false) { alvo.innerHTML = '<div class="vazio">A tabela de abordagens ainda não existe no banco. Rode o arquivo abordagens.sql no SQL Editor do Supabase e recarregue.</div>'; return; }
+    var lista = abordagensFiltradas();
+    if (!lista.length) { alvo.innerHTML = '<div class="vazio">' + (estado.abordagens.length ? "Nenhuma marca com essa busca." : "Nenhuma marca ainda. Clique em \"Importar lista\" para trazer as marcas que eu pesquisei, ou em \"Adicionar marca\".") + "</div>"; return; }
+    alvo.innerHTML = '<table class="planilha"><thead><tr><th>Marca</th><th>Contato</th><th>E-mail</th><th>Status</th><th>Abordada em</th><th>Projetos fechados</th><th><span class="sr">Ações</span></th></tr></thead><tbody>' +
+      lista.map(function (a) {
+        var insta = linkInstagram(a.instagram), whats = linkWhats(a.telefone), p = projetosDe(a.marca);
+        return '<tr class="clicavel" data-id="' + a.id + '" tabindex="0">' +
+          "<td><b>" + esc(a.marca) + "</b>" + (a.fonte === "pesquisa" ? '<span class="etiqueta site">pesquisa</span>' : "") +
+            '<br><span class="suave" style="font-size:12px">' + (insta ? '<a href="' + insta.link + '" target="_blank" rel="noopener">' + esc(insta.usuario) + "</a>" : "") +
+            (a.seguidores ? (insta ? " · " : "") + esc(a.seguidores) : "") + "</span></td>" +
+          '<td style="white-space:nowrap">' + esc(a.contato || "") + (a.contato && a.telefone ? "<br>" : "") + '<span class="suave">' + esc(a.telefone || "") + "</span>" +
+            (whats ? ' <a class="btn-icone" href="' + whats + '" target="_blank" rel="noopener" aria-label="Abrir WhatsApp de ' + esc(a.marca) + '" title="Abrir no WhatsApp">' + ic("zap", "width:16px;height:16px") + "</a>" : "") + "</td>" +
+          '<td class="corte">' + (a.email ? '<a href="mailto:' + esc(a.email) + '">' + esc(a.email) + "</a>" : "") + "</td>" +
+          '<td><span class="pilula ab-' + esc(String(a.status || "").replace(/\s/g, "-")) + '">' + esc(nomeStatusAb[a.status] || a.status || "") + "</span></td>" +
+          '<td style="white-space:nowrap">' + dataBR(a.abordado_em) + "</td>" +
+          '<td style="white-space:nowrap">' + (p.qtd ? "<b>" + plural(p.qtd, "projeto", "projetos") + '</b><br><span class="suave" style="font-size:12px">' + plural(p.videos, "vídeo", "vídeos") + " · " + reais(p.valor) + "</span>" : '<span class="suave">nenhum ainda</span>') + "</td>" +
+          '<td><button class="btn pequeno" type="button" data-fechou="' + a.id + '" title="Cadastrar um projeto fechado com esta marca">' + ic("mais", "width:13px;height:13px") + " Projeto</button></td></tr>";
+      }).join("") + "</tbody></table>";
+    var tbody = alvo.querySelector("tbody");
+    function abrir(e) {
+      var tr = e.target.closest("tr[data-id]");
+      if (!tr) return;
+      var a = estado.abordagens.find(function (x) { return x.id === Number(tr.dataset.id); });
+      if (!a) return;
+      if (e.target.closest("[data-fechou]")) { formularioCampanha(null, a.marca); return; }
+      if (e.target.closest("a, button")) return;
+      formularioAbordagem(a);
+    }
+    tbody.addEventListener("click", abrir);
+    tbody.addEventListener("keydown", function (e) { if (e.key === "Enter" && e.target.matches("tr")) abrir(e); });
+  }
+
+  function formularioAbordagem(a) {
+    abrirFormulario({
+      titulo: a ? "Editar abordagem" : "Adicionar marca para abordar",
+      valores: a || { status: "a abordar", fonte: "manual" },
+      campos: [
+        { nome: "marca", rotulo: "Marca", obrigatorio: true },
+        { nome: "instagram", rotulo: "Instagram", dicaCampo: "@marca" },
+        { nome: "contato", rotulo: "Contato (pessoa)", dicaCampo: "Nome de quem cuida do marketing" },
+        { nome: "telefone", rotulo: "WhatsApp / telefone", tipo: "tel" },
+        { nome: "email", rotulo: "E-mail", tipo: "email" },
+        { nome: "site", rotulo: "Site", tipo: "url" },
+        { nome: "seguidores", rotulo: "Seguidores", dicaCampo: "Ex: 12 mil" },
+        { nome: "nicho", rotulo: "Nicho", lista: uniq(estado.abordagens.map(function (x) { return x.nicho; })) },
+        { nome: "status", rotulo: "Status", tipo: "select", opcoes: STATUS_AB },
+        { nome: "abordado_em", rotulo: "Abordada em", tipo: "date" },
+        { nome: "vende", rotulo: "O que vende", inteiro: true },
+        { nome: "usa_creator", rotulo: "Já usa vídeo de creator?", inteiro: true, dicaCampo: "Ex: sim, tem reels de creators / não confirmado" },
+        { nome: "obs", rotulo: "Observação", tipo: "textarea" }
+      ],
+      aoSalvar: async function (dados) {
+        // Mudou para "abordada" (ou depois) sem data: preenche com hoje
+        if (dados.status !== "a abordar" && !dados.abordado_em) dados.abordado_em = hojeISO();
+        var r1 = await gravar("abordagens", dados, a && a.id);
+        if (r1.erro) return mensagemCurta(r1.erro);
+        if (a) trocarNaLista(estado.abordagens, r1.linha); else estado.abordagens.unshift(r1.linha);
+        toast(a ? "Abordagem atualizada" : "Marca adicionada à lista");
+        montarSeguro("abordagens");
+      },
+      aoApagar: a ? async function () {
+        var r2 = await apagar("abordagens", a.id);
+        if (r2.erro) return mensagemCurta(r2.erro);
+        estado.abordagens = estado.abordagens.filter(function (x) { return x.id !== a.id; });
+        toast("Marca tirada da lista");
+        montarSeguro("abordagens");
+      } : null
+    });
+  }
+
+  /* ----- Importar lista (o arquivo que eu te entrego depois de pesquisar) ----- */
+  // Entende CSV com ; , ou tab (inclusive colado de planilha)
+  function lerTabela(texto) {
+    texto = String(texto || "").replace(/^﻿/, "").replace(/\r\n?/g, "\n").trim();
+    if (!texto) return [];
+    var primeira = texto.split("\n")[0];
+    var sep = ["\t", ";", ","].sort(function (x, y) { return primeira.split(y).length - primeira.split(x).length; })[0];
+    var linhas = [], linha = [], cel = "", aspas = false;
+    for (var i = 0; i < texto.length; i++) {
+      var ch = texto[i];
+      if (aspas) {
+        if (ch === '"' && texto[i + 1] === '"') { cel += '"'; i++; }
+        else if (ch === '"') aspas = false;
+        else cel += ch;
+      } else if (ch === '"' && cel === "") aspas = true;
+      else if (ch === sep) { linha.push(cel.trim()); cel = ""; }
+      else if (ch === "\n") { linha.push(cel.trim()); linhas.push(linha); linha = []; cel = ""; }
+      else cel += ch;
+    }
+    linha.push(cel.trim()); linhas.push(linha);
+    return linhas.filter(function (l) { return l.some(function (c) { return c; }); });
+  }
+  // Descobre qual coluna é qual pelo nome do cabeçalho
+  var MAPA_COLUNAS = [
+    ["marca", /^(marca|nome|empresa|nome da marca)$/],
+    ["instagram", /^(instagram|@|perfil|usuario|arroba|@ do perfil)$/],
+    ["link", /^(link|link do instagram|url)$/],
+    ["seguidores", /(seguidores|followers)/],
+    ["vende", /(vende|produto)/],
+    ["usa_creator", /(creator|ugc|video)/],
+    ["email", /^(e-?mail)/],
+    ["telefone", /(telefone|whats|celular|fone)/],
+    ["contato", /^(contato|pessoa|responsavel|nome do contato)$/],
+    ["site", /^(site|website)$/],
+    ["nicho", /^(nicho|categoria|segmento)$/],
+    ["obs", /^(obs|observacao|observacoes|notas?)$/]
+  ];
+  function linhasParaMarcas(tabela) {
+    if (!tabela.length) return [];
+    var cab = tabela[0].map(function (c) { return semAcento(c).trim(); });
+    var indice = {};
+    cab.forEach(function (c, i) {
+      var achou = MAPA_COLUNAS.find(function (m) { return m[1].test(c) && !(m[0] in indice); });
+      if (achou) indice[achou[0]] = i;
+    });
+    var temCabecalho = "marca" in indice;
+    if (!temCabecalho) indice = { marca: 0, instagram: 1, seguidores: 2, vende: 3, email: 4, telefone: 5 };
+    return tabela.slice(temCabecalho ? 1 : 0).map(function (l) {
+      var pega = function (k) { return k in indice ? (l[indice[k]] || "").trim() : ""; };
+      var insta = pega("instagram") || pega("link");
+      var item = { marca: pega("marca"), instagram: insta ? (linkInstagram(insta) || {}).usuario || insta : "", seguidores: pega("seguidores"),
+        vende: pega("vende"), usa_creator: pega("usa_creator"), email: pega("email"), telefone: pega("telefone"),
+        contato: pega("contato"), site: pega("site"), nicho: pega("nicho"), obs: pega("obs") };
+      // E-mail de verdade só se tiver @; o resto vai pra observação
+      if (item.email && item.email.indexOf("@") < 0) { item.obs = [item.obs, "Contato: " + item.email].filter(Boolean).join(" · "); item.email = ""; }
+      return item;
+    }).filter(function (m) { return m.marca; });
+  }
+  function jaExiste(m, base) {
+    var km = chaveMarca(m.marca), ki = chaveInsta(m.instagram), ke = (m.email || "").toLowerCase();
+    return base.some(function (a) {
+      return (km && chaveMarca(a.marca) === km) || (ki && chaveInsta(a.instagram) === ki) || (ke && (a.email || "").toLowerCase() === ke);
+    });
+  }
+
+  function abrirImportacao() {
+    if (estado.ok.abordagens === false) { toast("Antes, rode o abordagens.sql no Supabase.", true); return; }
+    var html = '<div class="janela-corpo">' +
+      '<p style="margin:0 0 10px;font-size:13px">Escolha o arquivo que eu te entreguei depois da pesquisa (CSV), ou cole a lista aqui embaixo (pode copiar direto de uma planilha). Marcas que já estão na lista são puladas.</p>' +
+      '<input type="file" id="arquivo-ab" accept=".csv,.txt,text/csv,text/plain" class="campo" style="width:100%;margin-bottom:10px">' +
+      '<textarea class="campo" id="texto-ab" rows="7" style="width:100%" placeholder="marca;instagram;seguidores;o que vende;e-mail;telefone"></textarea>' +
+      '<div id="previa-ab" style="margin-top:12px;font-size:13px"></div></div>' +
+      '<div class="janela-rodape"><button class="btn" type="button" data-fechar>Cancelar</button><button class="btn principal" type="button" id="confirmar-ab" disabled>Importar</button></div>';
+    var raiz = abrirJanela("Importar lista de marcas", html, true);
+    var novas = [];
+    function atualizarPrevia() {
+      var lidas = linhasParaMarcas(lerTabela($("#texto-ab", raiz).value));
+      var base = estado.abordagens.slice();
+      novas = [];
+      var repetidas = 0;
+      lidas.forEach(function (m) { if (jaExiste(m, base)) repetidas++; else { novas.push(m); base.push(m); } });
+      var previa = $("#previa-ab", raiz);
+      if (!lidas.length) { previa.innerHTML = ""; $("#confirmar-ab", raiz).disabled = true; return; }
+      previa.innerHTML = "<b>" + plural(novas.length, "marca nova", "marcas novas") + "</b>" + (repetidas ? ' <span class="suave">· ' + plural(repetidas, "já estava na lista e vai ser pulada", "já estavam na lista e vão ser puladas") + "</span>" : "") +
+        (novas.length ? '<ul style="margin:8px 0 0;padding-left:18px;max-height:180px;overflow:auto">' + novas.map(function (m) {
+          return "<li>" + esc(m.marca) + (m.instagram ? ' <span class="suave">' + esc(m.instagram) + "</span>" : "") + (m.seguidores ? ' <span class="suave">· ' + esc(m.seguidores) + "</span>" : "") + "</li>";
+        }).join("") + "</ul>" : "");
+      $("#confirmar-ab", raiz).disabled = !novas.length;
+      $("#confirmar-ab", raiz).textContent = novas.length ? "Importar " + plural(novas.length, "marca", "marcas") : "Importar";
+    }
+    $("#texto-ab", raiz).addEventListener("input", atualizarPrevia);
+    $("#arquivo-ab", raiz).addEventListener("change", function (e) {
+      var f = e.target.files && e.target.files[0];
+      if (!f) return;
+      var leitor = new FileReader();
+      leitor.onload = function () { $("#texto-ab", raiz).value = leitor.result; atualizarPrevia(); };
+      leitor.readAsText(f, "utf-8");
+    });
+    $("#confirmar-ab", raiz).addEventListener("click", async function () {
+      var botao = this;
+      botao.disabled = true; botao.textContent = "Importando...";
+      var linhas = novas.map(function (m) {
+        var l = { status: "a abordar", fonte: "pesquisa" };
+        Object.keys(m).forEach(function (k) { if (m[k]) l[k] = String(m[k]).slice(0, k === "obs" ? 5000 : k === "vende" ? 500 : 300); });
+        return l;
+      });
+      try {
+        var r3 = await banco.from("abordagens").insert(linhas).select();
+        if (r3.error) throw r3.error;
+        estado.abordagens = (r3.data || []).concat(estado.abordagens);
+        janela.close();
+        toast(plural(linhas.length, "marca importada", "marcas importadas"));
+        montarSeguro("abordagens");
+      } catch (e) {
+        botao.disabled = false; botao.textContent = "Tentar de novo";
+        toast(mensagemCurta(e), true);
+      }
     });
   }
 

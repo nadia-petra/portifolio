@@ -309,3 +309,35 @@ join pg_namespace n on n.oid = c.relnamespace
 where n.nspname = 'public'
   and c.relname in ('videos', 'marcas', 'calendario', 'campanhas', 'marcados', 'visitas')
 order by 1;
+
+
+-- ---------------------------------------------------------------------
+-- 8. ABORDAGENS (adicionado depois). Mesmo conteúdo do arquivo abordagens.sql.
+-- ---------------------------------------------------------------------
+create table if not exists public.abordagens (
+  id bigint generated always as identity primary key,
+  criado_em timestamptz not null default now(),
+  marca text not null check (char_length(marca) between 1 and 160),
+  instagram text check (char_length(instagram) <= 120),
+  seguidores text check (char_length(seguidores) <= 40),
+  nicho text check (char_length(nicho) <= 120),
+  vende text check (char_length(vende) <= 500),
+  contato text check (char_length(contato) <= 160),
+  telefone text check (char_length(telefone) <= 40),
+  email text check (char_length(email) <= 200),
+  site text check (char_length(site) <= 300),
+  usa_creator text check (char_length(usa_creator) <= 200),
+  status text not null default 'a abordar' check (status in
+    ('a abordar', 'abordada', 'respondeu', 'negociando', 'fechou', 'sem resposta', 'recusou')),
+  abordado_em date,
+  fonte text not null default 'manual' check (fonte in ('manual', 'pesquisa')),
+  obs text check (char_length(obs) <= 5000)
+);
+
+-- A tranca: ninguém deslogado lê nem escreve nada aqui. Só a Nadia, logada.
+alter table public.abordagens enable row level security;
+revoke all on public.abordagens from anon;
+
+drop policy if exists "so a nadia" on public.abordagens;
+create policy "so a nadia" on public.abordagens
+  for all to authenticated using (public.eh_a_nadia()) with check (public.eh_a_nadia());
