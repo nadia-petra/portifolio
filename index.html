@@ -465,7 +465,17 @@ body.na-capa .elastico, body.na-capa::before{ opacity:0; }
   background-image:repeating-linear-gradient(transparent 0 31px, rgba(126,150,130,.25) 31px 32px);
 }
 .campo textarea{ min-height:150px; resize:vertical; line-height:32px; padding-top:0; }
-.campo input:focus, .campo textarea:focus{ border-color:var(--bordo); }
+.campo select{
+  width:100%; font:inherit; color:var(--tinta); padding:12px 14px; min-height:48px;
+  background:var(--linho); border:1px solid rgba(75,58,47,.45); border-radius:4px;
+}
+.campo input:focus, .campo textarea:focus, .campo select:focus{ border-color:var(--bordo); }
+.campo [aria-invalid="true"]{ border-color:#a8453a; box-shadow:0 0 0 2px rgba(168,69,58,.18); }
+.campo label .obrig{ color:#a8453a; margin-left:2px; }
+.duas-col{ display:grid; grid-template-columns:1fr 1fr; gap:inherit; }
+@media (max-width:560px){ .duas-col{ grid-template-columns:1fr; } }
+.erro-form{ margin:0; color:#a8453a; font-size:.92rem; font-weight:500; }
+.erro-form:empty{ display:none; }
 .confirmacao{
   padding:26px; border:1px solid var(--dourado); background:rgba(126,150,130,.12); border-radius:4px; text-align:center;
 }
@@ -499,7 +509,7 @@ body.na-capa .elastico, body.na-capa::before{ opacity:0; }
   background:var(--papel); color:var(--tinta);
   box-shadow:0 30px 60px rgba(0,0,0,.5);
 }
-.captura::before{ content:""; position:absolute; inset:10px; border:1px solid var(--dourado); border-radius:3px; pointer-events:none; }
+.captura{ outline:1px solid var(--dourado); outline-offset:-10px; } /* fio fino na borda, que não rola junto */
 .captura::backdrop{ background:rgba(75,58,47,.6); }
 .captura[open]{ animation:abrir .35s ease both; }
 @keyframes abrir{ from{ opacity:0; transform:translateY(16px) scale(.97);} to{ opacity:1; transform:none;} }
@@ -511,6 +521,7 @@ body.na-capa .elastico, body.na-capa::before{ opacity:0; }
 }
 .fechar:hover{ background:rgba(31,58,45,.1); }
 .captura .form{ gap:14px; }
+.captura .campo textarea{ min-height:110px; }
 .captura .selo{ width:58px; height:58px; right:auto; left:22px; top:18px; bottom:auto; }
 .captura .legenda{ padding-left:64px; padding-right:36px; }
 .captura .selo span{ font-size:1.3rem; }
@@ -725,20 +736,38 @@ body.na-capa .elastico, body.na-capa::before{ opacity:0; }
         <!-- FORMULÁRIO: hoje ele mostra a confirmação na tela e prepara um e-mail.
              Para receber as mensagens automaticamente, dá pra ligar num serviço
              como o Formspree depois. Me peça que eu configuro. -->
+        <!-- Todos os campos são obrigatórios. As opções de "O que você quer solicitar?"
+             ficam na lista OPCOES_SOLICITACAO no script, pra trocar fácil. -->
         <form class="form" id="form-contato" novalidate>
-          <div class="campo">
-            <label for="c-nome">Seu nome</label>
-            <input id="c-nome" name="nome" type="text" autocomplete="name" required>
+          <div class="duas-col">
+            <div class="campo">
+              <label for="c-nome">Seu nome<span class="obrig" aria-hidden="true">*</span></label>
+              <input id="c-nome" name="nome" type="text" autocomplete="name" maxlength="120" required>
+            </div>
+            <div class="campo">
+              <label for="c-marca">Marca<span class="obrig" aria-hidden="true">*</span></label>
+              <input id="c-marca" name="marca" type="text" autocomplete="organization" maxlength="160" required>
+            </div>
+          </div>
+          <div class="duas-col">
+            <div class="campo">
+              <label for="c-whats">WhatsApp / celular<span class="obrig" aria-hidden="true">*</span></label>
+              <input id="c-whats" name="whatsapp" type="tel" inputmode="tel" autocomplete="tel" placeholder="(00) 00000-0000" maxlength="20" required>
+            </div>
+            <div class="campo">
+              <label for="c-email">E-mail<span class="obrig" aria-hidden="true">*</span></label>
+              <input id="c-email" name="email" type="email" autocomplete="email" maxlength="200" required>
+            </div>
           </div>
           <div class="campo">
-            <label for="c-email">Seu e-mail</label>
-            <input id="c-email" name="email" type="email" autocomplete="email" required>
+            <label for="c-solicitacao">O que você quer solicitar?<span class="obrig" aria-hidden="true">*</span></label>
+            <select id="c-solicitacao" name="solicitacao" required></select>
           </div>
           <div class="campo">
-            <label for="c-msg">Mensagem</label>
-            <textarea id="c-msg" name="mensagem" required></textarea>
+            <label for="c-msg">Conte-me sobre o seu projeto<span class="obrig" aria-hidden="true">*</span></label>
+            <textarea id="c-msg" name="mensagem" maxlength="4000" required></textarea>
           </div>
-          <p class="sr" id="erro-contato" aria-live="assertive"></p>
+          <p class="erro-form" id="erro-contato" role="alert"></p>
           <button class="btn btn-cheio" type="submit">Enviar mensagem</button>
         </form>
         <div class="confirmacao" id="ok-contato" hidden tabindex="-1">
@@ -789,17 +818,33 @@ body.na-capa .elastico, body.na-capa::before{ opacity:0; }
   <div id="captura-corpo">
     <span class="legenda">um presente pra você</span>
     <h2 id="titulo-captura">Quer meu mídia kit <em>completo?</em></h2>
-    <p>Deixa seu nome e e-mail que eu te envio com valores, formatos e cases.</p>
+    <p>Preencha os seus dados que eu te respondo com valores, formatos e cases.</p>
     <form class="form" id="form-captura" novalidate>
       <div class="campo">
-        <label for="k-nome">Nome</label>
-        <input id="k-nome" name="nome" type="text" autocomplete="name" required>
+        <label for="k-nome">Seu nome<span class="obrig" aria-hidden="true">*</span></label>
+        <input id="k-nome" name="nome" type="text" autocomplete="name" maxlength="120" required>
       </div>
       <div class="campo">
-        <label for="k-email">E-mail</label>
-        <input id="k-email" name="email" type="email" autocomplete="email" required>
+        <label for="k-marca">Marca<span class="obrig" aria-hidden="true">*</span></label>
+        <input id="k-marca" name="marca" type="text" autocomplete="organization" maxlength="160" required>
       </div>
-      <p class="sr" id="erro-captura" aria-live="assertive"></p>
+      <div class="campo">
+        <label for="k-whats">WhatsApp / celular<span class="obrig" aria-hidden="true">*</span></label>
+        <input id="k-whats" name="whatsapp" type="tel" inputmode="tel" autocomplete="tel" placeholder="(00) 00000-0000" maxlength="20" required>
+      </div>
+      <div class="campo">
+        <label for="k-email">E-mail<span class="obrig" aria-hidden="true">*</span></label>
+        <input id="k-email" name="email" type="email" autocomplete="email" maxlength="200" required>
+      </div>
+      <div class="campo">
+        <label for="k-solicitacao">O que você quer solicitar?<span class="obrig" aria-hidden="true">*</span></label>
+        <select id="k-solicitacao" name="solicitacao" required></select>
+      </div>
+      <div class="campo">
+        <label for="k-msg">Conte-me sobre o seu projeto<span class="obrig" aria-hidden="true">*</span></label>
+        <textarea id="k-msg" name="mensagem" maxlength="4000" required></textarea>
+      </div>
+      <p class="erro-form" id="erro-captura" role="alert"></p>
       <button class="btn btn-cheio" type="submit">Quero receber</button>
     </form>
   </div>
@@ -1311,26 +1356,62 @@ if ("IntersectionObserver" in window){
   document.querySelectorAll("[data-contar]").forEach(contar);
 }
 
-// Validação simples dos formulários
+// Opções de "O que você quer solicitar?" (vale pros dois formulários). Edite à vontade.
+const OPCOES_SOLICITACAO = ["Valores", "Contratar publicidade de influencer", "Contratar UGC", "Outros"];
+document.querySelectorAll('select[name="solicitacao"]').forEach((s) => {
+  s.innerHTML = `<option value="">Selecione uma opção</option>` + OPCOES_SOLICITACAO.map((o) => `<option>${esc(o)}</option>`).join("");
+});
+
+// Validação dos formulários: todos os campos são obrigatórios
+function campoComProblema(c){
+  const v = c.value.trim();
+  if (!v) return true;
+  if (c.type === "email") return !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v);
+  if (c.type === "tel") return v.replace(/\D/g, "").length < 10;   // DDD + número
+  return false;
+}
 function validar(form, aviso){
-  const vazios = [...form.querySelectorAll("[required]")].filter((c) => !c.value.trim() || (c.type === "email" && !c.checkValidity()));
-  form.querySelectorAll("[required]").forEach((c) => c.setAttribute("aria-invalid", String(vazios.includes(c))));
-  if (vazios.length){
-    aviso.textContent = "Confira os campos: " + vazios.map((c) => form.querySelector(`label[for="${c.id}"]`).textContent).join(", ") + ".";
-    vazios[0].focus();
+  const campos = [...form.querySelectorAll("[required]")];
+  const problemas = campos.filter(campoComProblema);
+  campos.forEach((c) => c.setAttribute("aria-invalid", String(problemas.includes(c))));
+  if (problemas.length){
+    const nomes = problemas.map((c) => form.querySelector(`label[for="${c.id}"]`).firstChild.textContent.trim());
+    aviso.textContent = (problemas.length === 1 ? "Falta preencher certinho: " : "Faltam preencher certinho: ") + nomes.join(", ") + ".";
+    problemas[0].focus();
     return false;
   }
   aviso.textContent = "";
   return true;
 }
+// Quando a pessoa corrige o campo, tira o vermelho
+document.addEventListener("input", (e) => {
+  const c = e.target.closest('.campo [aria-invalid="true"]');
+  if (c && !campoComProblema(c)) c.setAttribute("aria-invalid", "false");
+});
+document.addEventListener("change", (e) => {
+  const c = e.target.closest('.campo [aria-invalid="true"]');
+  if (c && !campoComProblema(c)) c.setAttribute("aria-invalid", "false");
+});
 
-// Grava quem mandou o formulário na sua base de marcas (tabela "marcas"), como Lead
-async function salvarLead(nome, email, obs){
+function dadosDoFormulario(form){
+  return {
+    nome: form.nome.value.trim(), marca: form.marca.value.trim(), whatsapp: form.whatsapp.value.trim(),
+    email: form.email.value.trim(), solicitacao: form.solicitacao.value, mensagem: form.mensagem.value.trim()
+  };
+}
+
+// Grava na sua base de marcas (tabela "marcas"), como Lead.
+// Na coluna Marca entra o nome da marca; quem escreveu, o pedido e a mensagem vão na Observação.
+async function salvarLead(d, deOnde){
   const b = window.banco;
   if (!b) return false;
   const hoje = new Date(), dia = hoje.getFullYear() + "-" + String(hoje.getMonth() + 1).padStart(2, "0") + "-" + String(hoje.getDate()).padStart(2, "0");
+  const obs = `Contato: ${d.nome}\nSolicitação: ${d.solicitacao}\nVeio pelo: ${deOnde}\n\n${d.mensagem}`;
   try {
-    const { error } = await b.from("marcas").insert({ nome: nome.slice(0, 160), email: email.slice(0, 200), obs: obs.slice(0, 5000), situacao: "lead", origem: "site", ultimo_contato: dia });
+    const { error } = await b.from("marcas").insert({
+      nome: d.marca.slice(0, 160), email: d.email.slice(0, 200), telefone: d.whatsapp.slice(0, 40),
+      obs: obs.slice(0, 5000), situacao: "lead", origem: "site", ultimo_contato: dia
+    });
     return !error;
   } catch (erro) { return false; }
 }
@@ -1340,12 +1421,12 @@ $("#form-contato").addEventListener("submit", async (e) => {
   e.preventDefault();
   const form = e.target;
   if (!validar(form, $("#erro-contato"))) return;
-  const nome = form.nome.value.trim(), email = form.email.value.trim(), mensagem = form.mensagem.value.trim();
-  const corpo = `Oi, Nadia! Aqui é ${nome} (${email}).\n\n${mensagem}`;
-  $("#ok-mailto").href = "mailto:nadiapetraugc@gmail.com?subject=" + encodeURIComponent("Proposta de parceria UGC") + "&body=" + encodeURIComponent(corpo);
+  const d = dadosDoFormulario(form), nome = d.nome;
+  const corpo = `Oi, Nadia! Aqui é ${d.nome}, da ${d.marca}.\nWhatsApp: ${d.whatsapp}\nE-mail: ${d.email}\nQuero: ${d.solicitacao}\n\n${d.mensagem}`;
+  $("#ok-mailto").href = "mailto:nadiapetraugc@gmail.com?subject=" + encodeURIComponent(`${d.solicitacao} | ${d.marca}`) + "&body=" + encodeURIComponent(corpo);
   const botao = form.querySelector("[type=submit]");
   botao.disabled = true; botao.textContent = "Enviando...";
-  const salvou = await salvarLead(nome, email, mensagem);
+  const salvou = await salvarLead(d, "formulário do fim da página");
   botao.disabled = false; botao.textContent = "Enviar mensagem";
   $("#ok-nome").textContent = nome.split(" ")[0];
   const ok = $("#ok-contato");
@@ -1455,10 +1536,10 @@ $("#form-captura").addEventListener("submit", async (e) => {
   e.preventDefault();
   const form = e.target;
   if (!validar(form, $("#erro-captura"))) return;
-  // Quem pede o mídia kit também entra na sua base de marcas, como Lead
+  // Quem preenche o card também entra na sua base de marcas, como Lead
   const botao = form.querySelector("[type=submit]");
   botao.disabled = true;
-  await salvarLead(form.nome.value.trim(), form.email.value.trim(), "Pediu o mídia kit pelo site.");
+  await salvarLead(dadosDoFormulario(form), "card do mídia kit");
   botao.disabled = false;
   $("#captura-corpo").hidden = true;
   captura.querySelector(".selo").style.display = "none"; // tira o selo NP da confirmação
