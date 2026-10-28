@@ -349,3 +349,4 @@ create policy "so a nadia" on public.abordagens
 alter table public.campanhas add column if not exists moeda text not null default 'BRL';
 alter table public.campanhas drop constraint if exists campanhas_moeda_check;
 alter table public.campanhas add constraint campanhas_moeda_check check (moeda in ('BRL', 'USD'));
+notify pgrst, 'reload schema';
