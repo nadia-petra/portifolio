@@ -49,6 +49,18 @@
   function somaMoedas(lista) {
     return lista.reduce(function (s, c) { s[c.moeda === "USD" ? "USD" : "BRL"] += num(c.valor); return s; }, { BRL: 0, USD: 0 });
   }
+  // Dólar do dia (AwesomeAPI, gratuita). Se não carregar, o painel segue sem ela.
+  var cotacao = { estado: "carregando" };
+  async function buscarCotacao() {
+    try {
+      var r = await fetch("https://economia.awesomeapi.com.br/json/last/USD-BRL");
+      var d = (await r.json()).USDBRL;
+      var v = Number(d && d.bid);
+      if (!r.ok || !(v > 0)) throw new Error("cotação vazia");
+      cotacao = { estado: "ok", valor: v, quando: new Date(Number(d.timestamp) * 1000) };
+    } catch (e) { cotacao = { estado: "erro" }; }
+    if (abaAtual === "campanhas") montarSeguro("campanhas");
+  }
   function textoMoedas(s) {
     if (s.USD && !s.BRL) return dolar.format(s.USD);
     return reais(s.BRL) + (s.USD ? " + " + dolar.format(s.USD) : "");
@@ -180,6 +192,7 @@
   todos[4].forEach(function (l) { if (l.chave) estado.marcados[l.chave] = true; });
   estado.visitas = todos[5];
   estado.abordagens = todos[6];
+  buscarCotacao();
 
   // Grava no banco e devolve a linha salva (ou o erro)
   async function gravar(tabela, dados, id) {
@@ -901,12 +914,17 @@
     var ticket = { BRL: videos.BRL > 0 ? valorTotal.BRL / videos.BRL : 0, USD: videos.USD > 0 ? valorTotal.USD / videos.USD : 0 };
     var aReceber = somaMoedas(reais_.filter(function (c) { return c.pagamento !== "pago"; }));
     var recebido = somaMoedas(reais_.filter(function (c) { return c.pagamento === "pago"; }));
+    var dolarHoje = cotacao.estado === "ok" ? reais(cotacao.valor) : cotacao.estado === "erro" ? "sem cotação" : "buscando...";
+    var dolarSub = cotacao.estado !== "ok" ? (cotacao.estado === "erro" ? "não consegui buscar agora" : "cotação do dia")
+      : aReceber.USD ? dolar.format(aReceber.USD) + " a receber dá uns <b>" + reais(aReceber.USD * cotacao.valor) + "</b>"
+      : "cotação de " + cotacao.quando.toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
 
     corpo.innerHTML = '<div class="faixa">' +
         "<div><small>Campanhas</small><strong>" + total + "</strong><span>linhas de exemplo não entram nas contas</span></div>" +
         "<div><small>Ativas</small><strong>" + ativas + "</strong><span>" + plural(total - ativas, "finalizada", "finalizadas") + "</span></div>" +
         "<div><small>Valor total</small><strong>" + textoMoedas(valorTotal) + "</strong><span>ticket médio por vídeo " + textoMoedas(ticket) + "</span></div>" +
         "<div><small>A receber</small><strong>" + textoMoedas(aReceber) + "</strong><span>já recebido " + textoMoedas(recebido) + "</span></div>" +
+        '<div title="Valor de compra do dólar comercial. O que cai na conta pode mudar com a taxa da plataforma de pagamento."><small>Dólar hoje</small><strong>' + dolarHoje + "</strong><span>" + dolarSub + "</span></div>" +
       "</div>" +
       '<div class="bloco"><div class="bloco-topo">' +
         '<div class="chips" role="group" aria-label="Filtrar campanhas">' + [["todas", "Todas"], ["ativas", "Ativas"], ["finalizadas", "Finalizadas"]].map(function (f) {
