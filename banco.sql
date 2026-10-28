@@ -90,6 +90,7 @@ create table if not exists public.campanhas (
     ('Briefing', 'Roteiro', 'Aprovação Roteiro', 'Gravação', 'Edição', 'Aprovado', 'Entregue')),
   qtd integer not null default 1 check (qtd >= 0),
   valor numeric(12, 2) not null default 0 check (valor >= 0),
+  moeda text not null default 'BRL' check (moeda in ('BRL', 'USD')),
   prazo date,
   pagamento text not null default 'pendente' check (pagamento in ('pendente', 'pago')),
   ativa boolean not null default true,
@@ -341,3 +342,10 @@ revoke all on public.abordagens from anon;
 drop policy if exists "so a nadia" on public.abordagens;
 create policy "so a nadia" on public.abordagens
   for all to authenticated using (public.eh_a_nadia()) with check (public.eh_a_nadia());
+
+-- ---------------------------------------------------------------------
+-- 9. MOEDA DAS CAMPANHAS (adicionado depois). Mesmo conteúdo do moeda.sql.
+-- ---------------------------------------------------------------------
+alter table public.campanhas add column if not exists moeda text not null default 'BRL';
+alter table public.campanhas drop constraint if exists campanhas_moeda_check;
+alter table public.campanhas add constraint campanhas_moeda_check check (moeda in ('BRL', 'USD'));

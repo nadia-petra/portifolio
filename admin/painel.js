@@ -43,6 +43,16 @@
   function num(v) { var n = Number(v); return isFinite(n) ? n : 0; }
   var moeda = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
   function reais(v) { return moeda.format(num(v)); }
+  // Campanhas podem ser em real ou em dólar: cada moeda soma separada
+  var dolar = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "USD" });
+  function dinheiro(v, m) { return m === "USD" ? dolar.format(num(v)) : reais(v); }
+  function somaMoedas(lista) {
+    return lista.reduce(function (s, c) { s[c.moeda === "USD" ? "USD" : "BRL"] += num(c.valor); return s; }, { BRL: 0, USD: 0 });
+  }
+  function textoMoedas(s) {
+    if (s.USD && !s.BRL) return dolar.format(s.USD);
+    return reais(s.BRL) + (s.USD ? " + " + dolar.format(s.USD) : "");
+  }
   function iso(d) { return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); }
   function hojeISO() { return iso(new Date()); }
   function deISO(s) { var p = String(s).slice(0, 10).split("-").map(Number); return new Date(p[0], p[1] - 1, p[2]); }
@@ -122,7 +132,7 @@
     videos: ["titulo", "link", "nicho", "formato", "marca", "destaque", "ordem", "visivel"],
     marcas: ["nome", "instagram", "email", "telefone", "situacao", "obs", "ultimo_contato"],
     calendario: ["titulo", "marca", "tipo", "data", "status"],
-    campanhas: ["campanha", "cliente", "tipo", "status", "qtd", "valor", "prazo", "pagamento", "ativa", "favorita"],
+    campanhas: ["campanha", "cliente", "tipo", "status", "qtd", "valor", "moeda", "prazo", "pagamento", "ativa", "favorita"],
     marcados: ["chave"],
     visitas: ["data", "pagina", "origem"],
     abordagens: ["marca", "instagram", "contato", "telefone", "email", "status", "abordado_em"]
@@ -886,17 +896,17 @@
     var reais_ = estado.campanhas.filter(function (c) { return !c.exemplo; });
     var total = reais_.length;
     var ativas = reais_.filter(function (c) { return c.ativa !== false; }).length;
-    var valorTotal = reais_.reduce(function (s, c) { return s + num(c.valor); }, 0);
-    var qtdTotal = reais_.reduce(function (s, c) { return s + num(c.qtd); }, 0);
-    var ticket = qtdTotal > 0 ? valorTotal / qtdTotal : 0;
-    var aReceber = reais_.filter(function (c) { return c.pagamento !== "pago"; }).reduce(function (s, c) { return s + num(c.valor); }, 0);
-    var recebido = reais_.filter(function (c) { return c.pagamento === "pago"; }).reduce(function (s, c) { return s + num(c.valor); }, 0);
+    var valorTotal = somaMoedas(reais_);
+    var videos = reais_.reduce(function (s, c) { s[c.moeda === "USD" ? "USD" : "BRL"] += num(c.qtd); return s; }, { BRL: 0, USD: 0 });
+    var ticket = { BRL: videos.BRL > 0 ? valorTotal.BRL / videos.BRL : 0, USD: videos.USD > 0 ? valorTotal.USD / videos.USD : 0 };
+    var aReceber = somaMoedas(reais_.filter(function (c) { return c.pagamento !== "pago"; }));
+    var recebido = somaMoedas(reais_.filter(function (c) { return c.pagamento === "pago"; }));
 
     corpo.innerHTML = '<div class="faixa">' +
         "<div><small>Campanhas</small><strong>" + total + "</strong><span>linhas de exemplo não entram nas contas</span></div>" +
         "<div><small>Ativas</small><strong>" + ativas + "</strong><span>" + plural(total - ativas, "finalizada", "finalizadas") + "</span></div>" +
-        "<div><small>Valor total</small><strong>" + reais(valorTotal) + "</strong><span>ticket médio por vídeo " + reais(ticket) + "</span></div>" +
-        "<div><small>A receber</small><strong>" + reais(aReceber) + "</strong><span>já recebido " + reais(recebido) + "</span></div>" +
+        "<div><small>Valor total</small><strong>" + textoMoedas(valorTotal) + "</strong><span>ticket médio por vídeo " + textoMoedas(ticket) + "</span></div>" +
+        "<div><small>A receber</small><strong>" + textoMoedas(aReceber) + "</strong><span>já recebido " + textoMoedas(recebido) + "</span></div>" +
       "</div>" +
       '<div class="bloco"><div class="bloco-topo">' +
         '<div class="chips" role="group" aria-label="Filtrar campanhas">' + [["todas", "Todas"], ["ativas", "Ativas"], ["finalizadas", "Finalizadas"]].map(function (f) {
@@ -914,9 +924,9 @@
     $("#nova-camp").addEventListener("click", function () { formularioCampanha(null); });
     $("#baixar-camp").addEventListener("click", function () {
       var linhas = campanhasVisiveis().map(function (c) {
-        return [c.favorita ? "Sim" : "", c.campanha, c.cliente, c.tipo, c.status, num(c.qtd), num(c.valor).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }), dataBR(c.prazo), c.pagamento === "pago" ? "Pago" : "Pendente", c.ativa === false ? "Finalizada" : "Ativa"];
+        return [c.favorita ? "Sim" : "", c.campanha, c.cliente, c.tipo, c.status, num(c.qtd), num(c.valor).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }), c.moeda === "USD" ? "US$" : "R$", dataBR(c.prazo), c.pagamento === "pago" ? "Pago" : "Pendente", c.ativa === false ? "Finalizada" : "Ativa"];
       });
-      baixarCSV("campanhas", ["Favorita", "Campanha", "Cliente", "Tipo", "Status", "Qtd", "Valor (R$)", "Prazo", "Pagamento", "Situação"], linhas);
+      baixarCSV("campanhas", ["Favorita", "Campanha", "Cliente", "Tipo", "Status", "Qtd", "Valor", "Moeda", "Prazo", "Pagamento", "Situação"], linhas);
     });
   }
 
@@ -940,7 +950,7 @@
         '<td><span class="pilula ' + (c.tipo === "Publicidade" ? "tipo-publicidade" : "tipo-conteudo") + '">' + esc(c.tipo || "") + "</span></td>" +
         '<td><span class="pilula st-' + (st < 0 ? 0 : st) + '">' + esc(c.status || "") + "</span></td>" +
         '<td class="num">' + num(c.qtd) + "</td>" +
-        '<td class="num">' + reais(c.valor) + "</td>" +
+        '<td class="num">' + dinheiro(c.valor, c.moeda) + "</td>" +
         '<td style="white-space:nowrap">' + dataBR(c.prazo) + avisoPrazo(c) + "</td>" +
         '<td><span class="' + (c.pagamento === "pago" ? "pago" : "pendente") + '">' + (c.pagamento === "pago" ? "Pago" : "Pendente") + "</span></td></tr>";
     }).join("") : '<tr><td colspan="9"><div class="vazio">' + (estado.campanhas.length ? "Nenhuma campanha com esse filtro." : "Nenhuma campanha ainda. Clique em \"Adicionar campanha\".") + "</div></td></tr>";
@@ -977,7 +987,7 @@
   function formularioCampanha(c, clienteNovo) {
     abrirFormulario({
       titulo: c ? "Editar campanha" : "Adicionar campanha",
-      valores: c || { cliente: clienteNovo || "", tipo: "Conteúdo", status: "Briefing", qtd: 1, valor: 0, pagamento: "pendente", ativa: true },
+      valores: c || { cliente: clienteNovo || "", tipo: "Conteúdo", status: "Briefing", qtd: 1, valor: 0, moeda: "BRL", pagamento: "pendente", ativa: true },
       campos: [
         { nome: "campanha", rotulo: "Campanha", obrigatorio: true, inteiro: true },
         { nome: "cliente", rotulo: "Cliente", lista: uniq(estado.marcas.map(function (m) { return m.nome; }).concat(estado.abordagens.map(function (a) { return a.marca; }))), dica: "Use o mesmo nome da marca na aba Abordagens, que o projeto aparece lá sozinho." },
@@ -985,7 +995,8 @@
         { nome: "status", rotulo: "Status", tipo: "select", opcoes: FUNIL },
         { nome: "prazo", rotulo: "Prazo", tipo: "date" },
         { nome: "qtd", rotulo: "Quantidade de vídeos", tipo: "number" },
-        { nome: "valor", rotulo: "Valor total (R$)", tipo: "number", passo: "0.01" },
+        { nome: "moeda", rotulo: "Moeda do cachê", tipo: "select", opcoes: [["BRL", "Real (R$)"], ["USD", "Dólar (US$)"]] },
+        { nome: "valor", rotulo: "Valor total", tipo: "number", passo: "0.01" },
         { nome: "pagamento", rotulo: "Pagamento", tipo: "select", opcoes: [["pendente", "Pendente"], ["pago", "Pago"]] },
         { nome: "ativa", rotulo: "Campanha ativa (desmarque quando finalizar)", tipo: "check" },
         { nome: "favorita", rotulo: "Destacar com estrela", tipo: "check" }
@@ -1024,7 +1035,7 @@
     return {
       qtd: lista.length,
       videos: lista.reduce(function (s, c) { return s + num(c.qtd); }, 0),
-      valor: lista.reduce(function (s, c) { return s + num(c.valor); }, 0)
+      valor: somaMoedas(lista)
     };
   }
   function abordagensFiltradas() {
@@ -1041,7 +1052,7 @@
     var abordadas = todas.filter(function (a) { return a.status !== "a abordar"; }).length;
     var responderam = conta(["respondeu", "negociando", "fechou"]);
     var fecharam = conta(["fechou"]);
-    var somaProj = todas.reduce(function (s, a) { var p = projetosDe(a.marca); s.qtd += p.qtd; s.videos += p.videos; s.valor += p.valor; return s; }, { qtd: 0, videos: 0, valor: 0 });
+    var somaProj = todas.reduce(function (s, a) { var p = projetosDe(a.marca); s.qtd += p.qtd; s.videos += p.videos; s.valor.BRL += p.valor.BRL; s.valor.USD += p.valor.USD; return s; }, { qtd: 0, videos: 0, valor: { BRL: 0, USD: 0 } });
     var taxa = abordadas > 0 ? Math.round((responderam / abordadas) * 100) : 0;
     var porStatus = {}; todas.forEach(function (a) { porStatus[a.status] = (porStatus[a.status] || 0) + 1; });
 
@@ -1049,7 +1060,7 @@
         "<div><small>Na lista</small><strong>" + todas.length + "</strong><span>" + plural(porStatus["a abordar"] || 0, "a abordar", "a abordar") + "</span></div>" +
         "<div><small>Já abordadas</small><strong>" + abordadas + "</strong><span>" + (abordadas ? taxa + "% responderam" : "comece pela lista") + "</span></div>" +
         "<div><small>Fecharam</small><strong>" + fecharam + "</strong><span>" + plural(somaProj.qtd, "projeto", "projetos") + " · " + plural(somaProj.videos, "vídeo", "vídeos") + "</span></div>" +
-        "<div><small>Valor fechado</small><strong>" + reais(somaProj.valor) + "</strong><span>soma da aba Campanhas</span></div>" +
+        "<div><small>Valor fechado</small><strong>" + textoMoedas(somaProj.valor) + "</strong><span>soma da aba Campanhas</span></div>" +
       "</div>" +
       '<div class="bloco"><div class="bloco-topo">' +
         '<input class="campo busca" type="search" id="busca-ab" placeholder="Buscar por marca, @, e-mail ou contato" aria-label="Buscar abordagens" value="' + esc(filtroAb.busca) + '">' +
@@ -1070,10 +1081,10 @@
       var linhas = abordagensFiltradas().map(function (a) {
         var p = projetosDe(a.marca);
         return [a.marca, a.instagram, a.seguidores, a.nicho, a.vende, a.contato, a.telefone, a.email, a.site, a.usa_creator,
-          nomeStatusAb[a.status] || a.status, dataBR(a.abordado_em), p.qtd, p.videos, p.valor.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }), a.obs];
+          nomeStatusAb[a.status] || a.status, dataBR(a.abordado_em), p.qtd, p.videos, textoMoedas(p.valor), a.obs];
       });
       baixarCSV("abordagens", ["Marca", "Instagram", "Seguidores", "Nicho", "O que vende", "Contato", "Telefone", "E-mail", "Site", "Já usa creator",
-        "Status", "Abordada em", "Projetos fechados", "Vídeos", "Valor fechado (R$)", "Observação"], linhas);
+        "Status", "Abordada em", "Projetos fechados", "Vídeos", "Valor fechado", "Observação"], linhas);
     });
   }
 
@@ -1095,7 +1106,7 @@
           '<td class="corte">' + (a.email ? '<a href="mailto:' + esc(a.email) + '">' + esc(a.email) + "</a>" : "") + "</td>" +
           '<td><span class="pilula ab-' + esc(String(a.status || "").replace(/\s/g, "-")) + '">' + esc(nomeStatusAb[a.status] || a.status || "") + "</span></td>" +
           '<td style="white-space:nowrap">' + dataBR(a.abordado_em) + "</td>" +
-          '<td style="white-space:nowrap">' + (p.qtd ? "<b>" + plural(p.qtd, "projeto", "projetos") + '</b><br><span class="suave" style="font-size:12px">' + plural(p.videos, "vídeo", "vídeos") + " · " + reais(p.valor) + "</span>" : '<span class="suave">nenhum ainda</span>') + "</td>" +
+          '<td style="white-space:nowrap">' + (p.qtd ? "<b>" + plural(p.qtd, "projeto", "projetos") + '</b><br><span class="suave" style="font-size:12px">' + plural(p.videos, "vídeo", "vídeos") + " · " + textoMoedas(p.valor) + "</span>" : '<span class="suave">nenhum ainda</span>') + "</td>" +
           '<td><button class="btn pequeno" type="button" data-fechou="' + a.id + '" title="Cadastrar um projeto fechado com esta marca">' + ic("mais", "width:13px;height:13px") + " Projeto</button></td></tr>";
       }).join("") + "</tbody></table>";
     var tbody = alvo.querySelector("tbody");
